@@ -1,0 +1,125 @@
+=pod
+
+=head1 NAME
+
+Resque - Redis-backed library for creating background jobs, placing them on multiple queues, and processing them later.
+
+=head1 VERSION
+
+version 0.01
+
+=head1 SYNOPSIS
+
+=head1 DESCRIPTION
+
+=head1 ATTRIBUTES
+
+=head2 redis
+
+=head2 namespace
+
+=head1 METHODS
+
+=head2 push
+  Pushes a job onto a queue. Queue name should be a string and the
+  item should be a Resque::Job object or a hashref containing:
+
+    class - The String name of the job class to run.
+     args - Any arrayref of arguments to pass the job.
+ 
+  Returns redis response.
+
+  Example
+ 
+    $resque->push( archive => { class => 'Archive', args => [ 35, 'tar' ] } )
+
+=head2 pop
+  Pops a job off a queue. Queue name should be a string.
+
+  Returns a Resque::Job object.
+
+=head2 size
+  Returns the size of a queue.
+  Queue name should be a string.
+
+=head2 peek
+  Returns an array of jobs currently queued. 
+
+  First argument is queue name and an optional secound and third are
+  start and count values that can be used for pagination.
+  start is the item to begin, count is how many items to return.
+
+  Passing a negative count argument will set a stop value instead
+  of count. So, passing -1 will return full list, -2 all but last
+  element and so on.
+ 
+  To get the 3rd page of a 30 item, paginatied list one would use:
+    $resque->peek('my_queue', 59, 30)
+
+=head2 list_range
+  Does the dirty work of fetching a range of items from a Redis list.
+
+=head2 queues
+  Returns an array of all known Resque queues.
+
+=head2 remove_queue
+  Given a queue name, completely deletes the queue.
+
+=head2 mass_dequeue
+  Removes all matching jobs from a queue. Expects a hashref 
+  with queue name, a class name, and, optionally, args.
+
+  Returns the number of jobs destroyed.
+  
+  If no args are provided, it will remove all jobs of the class
+  provided.
+
+  That is, for these two jobs:
+
+  { 'class' => 'UpdateGraph', 'args' => ['perl'] }
+  { 'class' => 'UpdateGraph', 'args' => ['ruby'] }
+  
+  The following call will remove both:
+    
+    $rescue->mass_dequeue({ 
+        queue => 'test', 
+        class => 'UpdateGraph' 
+    });
+    
+  Whereas specifying args will only remove the 2nd job:
+    
+    $rescue->mass_dequeue({ 
+        queue => 'test', 
+        class => 'UpdateGraph', 
+        args  => ['ruby'] 
+    });
+    
+  Using this method without args can be potentially very slow and 
+  memory intensive, depending on the size of your queue, as it loads 
+  all jobs into an array before processing.
+
+=head2 new_job
+  Build a Resque::Job object on this system for the given
+  hashref(see Resque::Job) or string(payload for object).
+
+=head2 keys
+  Returns an array of all known Resque keys in Redis. Redis' KEYS operation
+  is O(N) for the keyspace, so be careful - this can be slow for big databases.
+
+=head2 key
+  Concatenate $self->namespace with the received array of names
+  to build a redis key name for this resque instance.
+
+=head1 Queue manipulation
+
+=head1 AUTHOR
+
+Diego Kuperman <diego@freekeylabs.com>
+
+=head1 COPYRIGHT AND LICENSE
+
+This software is copyright (c) 2011 by Diego Kuperman.
+
+This is free software; you can redistribute it and/or modify it under
+the same terms as the Perl 5 programming language system itself.
+
