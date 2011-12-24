@@ -15,15 +15,20 @@ use Resque::Job;
 
 =attr redis
 =cut
+
+subtype 'Sugar::Redis' 
+    => as class_type('Redis');
+coerce 'Sugar::Redis' 
+    => from 'Str' 
+    => via { Redis->new( server => $_ ) };
+
 has redis => (
     is      => 'ro',
     lazy    => 1,
     coerce  => 1,
-    isa     => 'Redis',
+    isa     => 'Sugar::Redis',
     default => sub { Redis->new }
 );
-coerce Redis => from 'Str' 
-    => via { Redis->new( server => $_ ) };
 
 =attr namespace
 =cut
