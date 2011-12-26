@@ -1,15 +1,25 @@
 package Resque::Job;
 use Any::Moose;
+with 'Resque::Encoder';
 
 # ABSTRACT: Resque job container
 
-use JSON;
+use overload '""' => \&stringify;
 
 =attr resque
 =cut
 has resque  => ( 
     is      => 'rw', 
     default => sub { confess "This Resque::Job isn't associated to any Resque system yet!" } 
+);
+
+=attr worker
+=cut
+has worker  => ( 
+    is      => 'rw', 
+    lazy    => 1,
+    default   => sub { $_[0]->resque->worker },
+    predicate => 'has_worker'
 );
 
 =attr class
@@ -28,18 +38,16 @@ has queue   => (
 =cut
 has args    => ( is => 'rw', isa => 'ArrayRef', default => sub {[]} );
 
-=attr encoder
-  JSON encoder by default.
-=cut
-has encoder => ( is => 'ro', default => sub { JSON->new->utf8 } );
-
 =attr payload
-  Restore the job from encoded state.
+  Job encoded() representation.
+  When passed to constructor, this will restore the job from encoded state.
   This is read-only.
 =cut
 has payload => ( 
-    is  => 'ro', 
-    isa => 'Str', 
+    is   => 'ro', 
+    isa  => 'Str', 
+    lazy => 1,
+    default => sub { $_[0]->encode },
     trigger => sub {
         my ( $self, $value ) = @_;
         my $hr = $self->encoder->decode( $value );
@@ -54,10 +62,24 @@ has payload => (
 =cut
 sub encode {
     my $self = shift;
-    $self->encoder->encode({
+    $self->encoder->encode( $self->as_hashref );
+}
+
+sub as_hashref {
+    my $self = shift;
+    return {
         class => $self->class,
         args  => $self->args
-    });
+    };
+}
+
+sub stringify {
+    my $self = shift;
+    sprintf( "(Job{%s} | %s | %s)", 
+        $self->queue, 
+        $self->class, 
+        $self->encoder->encode( $self->args ) 
+    );
 }
 
 =method queue_from_class
@@ -77,7 +99,13 @@ sub queue_from_class {
 =method perform
 =cut
 sub perform {
-    confess "unable to perform yet!";
+    my $self = shift;
+    $self->class->require || confess $@;
+    $self->class->can('perform') 
+        || confess $self->class . " doesn't know how to perform";
+
+    no strict 'refs';
+    &{$self->class . '::perform'}($self); 
 }
 
 =method enqueue
@@ -104,6 +132,24 @@ sub dequeue {
         class => $self->class,
         args  => $self->args
     });
+}
+
+sub fail {
+    my ( $self, $why ) = @_;
+    #run_failure_hooks(exception)
+    $self->throw($why);
+}
+
+sub throw {
+    my ( $self, $error ) = @_;
+    $self->resque->throw(
+        job       => $self,
+        worker    => $self->worker,
+        queue     => $self->queue,
+        payload   => $self->encode,
+        exception => 'Resque::Failure::Job',
+        error     => $error
+    );
 }
 
 __PACKAGE__->meta->make_immutable();

@@ -1,18 +1,18 @@
 package Resque::Failure;
-use Any::Moose 'role';
+use Any::Moose 'Role';
 use overload '""' => \&stringify;
+use DateTime;
 
-requires 'requeue';
-requires 'remove';
 requires 'save';
 
 has 'worker' => ( 
+    is       => 'ro',
     isa      => 'Resque::Worker', 
     required => 1
 );
 
 has 'job' => ( 
-    isa      => 'Resque::Worker', 
+    is      => 'ro', 
     handles  => { 
         resque  => 'resque', 
         requeue => 'enqueue',
@@ -25,7 +25,7 @@ has 'job' => (
 
 has created => ( 
     is      => 'rw',
-    default => { DateTime->now } 
+    default => sub { DateTime->now } 
 );
 
 has failed_at => ( 
@@ -42,8 +42,9 @@ has exception => (
     lazy    => 1,
     default => sub { 'Resque::Failure' }
 );
-has error      => ( is => 'rw', isa => 'Str', required => 1 );
-has stacktrace => ( is => 'rw', isa => 'Str' ); 
+
+has error     => ( is => 'rw', isa => 'Str', required => 1 );
+has backtrace => ( is => 'rw', isa => 'Str' ); 
 
 around error => sub {
     my $orig = shift;
@@ -52,11 +53,10 @@ around error => sub {
     return $self->$orig() unless @_;
 
     my ( $value, @stack ) = split "\n", shift;
-    $self->stacktrace( join "\n", @stack );
+    $self->backtrace( join "\n", @stack );
     return $self->$orig($value);
 };
 
-
 sub stringify { $_[0]->error }
 
-__PACKAGE__->meta->make_immutable;
+1;

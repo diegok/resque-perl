@@ -6,6 +6,8 @@ use Any::Moose '::Util::TypeConstraints';
 
 use Redis;
 use Resque::Job;
+use Resque::Worker;
+use Resque::ExceptionHandler;
 
 =head1 SYNOPSIS
 
@@ -34,6 +36,24 @@ has redis => (
 =cut
 has namespace => ( is => 'rw', default => sub { 'resque' } );
 
+=attr failures
+  Failure handler.
+=cut
+has failures => (
+    is   => 'rw',
+    lazy => 1,
+    default => sub { Resque::ExceptionHandler->new( resque => $_[0] ) },
+    handles => [qw/ throw /]
+);
+
+=attr worker
+  A Resque::Worker on this resque instance.
+=cut
+has worker => (
+    is      => 'ro',
+    lazy    => 1,
+    default => sub { Resque::Worker->new( resque => $_[0] ) }
+);
 
 =head1 Queue manipulation
 
@@ -100,7 +120,7 @@ sub size {
 sub peek {
     my ( $self, $queue, $start, $count ) = @_;
     my $jobs = $self->list_range( 
-        $self->key( queue => $queue ), 
+        $queue, 
         $start || 0, $count || 1 
     );
     $_ = $self->new_job({ queue => $queue, payload => $_ }) for @$jobs;
@@ -111,9 +131,11 @@ sub peek {
   Does the dirty work of fetching a range of items from a Redis list.
 =cut
 sub list_range {
-    my ( $self, $key, $start, $count ) = @_;
+    my ( $self, $queue, $start, $count ) = @_;
     my $stop = $count > 0 ? $start + $count - 1 : $count;
-    my @items =  $self->redis->lrange($key, $start, $stop);
+    my @items =  $self->redis->lrange(
+        $self->key( queue => $queue ), $start, $stop
+    );
     return \@items;
 }
 
