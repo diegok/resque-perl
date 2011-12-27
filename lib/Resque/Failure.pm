@@ -1,5 +1,9 @@
 package Resque::Failure;
 use Any::Moose 'Role';
+with 'Resque::Encoder';
+
+# ABSTRACT: Role to be consumed by any failure class.
+
 use overload '""' => \&stringify;
 use DateTime;
 
@@ -16,8 +20,7 @@ has 'job' => (
     handles  => { 
         resque  => 'resque', 
         requeue => 'enqueue',
-        payload => 'encode',
-        encoder => 'encoder',
+        payload => 'payload',
         queue   => 'queue',
     },
     required => 1

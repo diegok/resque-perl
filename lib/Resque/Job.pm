@@ -1,5 +1,6 @@
 package Resque::Job;
 use Any::Moose;
+use Any::Moose '::Util::TypeConstraints';
 with 'Resque::Encoder';
 
 # ABSTRACT: Resque job container
@@ -39,38 +40,36 @@ has queue   => (
 has args    => ( is => 'rw', isa => 'ArrayRef', default => sub {[]} );
 
 =attr payload
-  Job encoded() representation.
+  HashRef representation of the job.
   When passed to constructor, this will restore the job from encoded state.
+  When passed as a string this will be coerced using JSON decoder.
   This is read-only.
 =cut
+coerce 'HashRef' 
+    => from 'Str' 
+    => via { JSON->new->utf8->decode($_) };
 has payload => ( 
     is   => 'ro', 
-    isa  => 'Str', 
+    isa  => 'HashRef', 
+    coerce => 1,
     lazy => 1,
-    default => sub { $_[0]->encode },
+    default => sub {{
+        class => $_[0]->class,
+        args  => $_[0]->args
+    }},
     trigger => sub {
-        my ( $self, $value ) = @_;
-        my $hr = $self->encoder->decode( $value );
+        my ( $self, $hr ) = @_;
         $self->class( $hr->{class} );
         $self->args( $hr->{args} ) if $hr->{args};
     }
 );
 
 =method encode
-  String representation to be used on 'payload'
-  constructor argument of this object.
+  String representation(JSON) to be used on the backend.
 =cut
 sub encode {
     my $self = shift;
-    $self->encoder->encode( $self->as_hashref );
-}
-
-sub as_hashref {
-    my $self = shift;
-    return {
-        class => $self->class,
-        args  => $self->args
-    };
+    $self->encoder->encode( $self->payload );
 }
 
 sub stringify {
@@ -146,7 +145,7 @@ sub throw {
         job       => $self,
         worker    => $self->worker,
         queue     => $self->queue,
-        payload   => $self->encode,
+        payload   => $self->payload,
         exception => 'Resque::Failure::Job',
         error     => $error
     );

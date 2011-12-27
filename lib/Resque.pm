@@ -7,7 +7,7 @@ use Any::Moose '::Util::TypeConstraints';
 use Redis;
 use Resque::Job;
 use Resque::Worker;
-use Resque::ExceptionHandler;
+use Resque::Failures;
 
 =head1 SYNOPSIS
 
@@ -16,8 +16,10 @@ use Resque::ExceptionHandler;
 =cut
 
 =attr redis
+  Redis instance for this Resque instance.
+  Accept a Redis object or string. When a string is
+  passed in, it will be used as Redis server argument.
 =cut
-
 subtype 'Sugar::Redis' 
     => as class_type('Redis');
 coerce 'Sugar::Redis' 
@@ -33,16 +35,19 @@ has redis => (
 );
 
 =attr namespace
+  By default 'resque' is used.
+  This is useful to run multiple queue systems with the
+  same Redis backend.
 =cut
 has namespace => ( is => 'rw', default => sub { 'resque' } );
 
 =attr failures
-  Failure handler.
+  Failures handler. See Resque::Failures.
 =cut
 has failures => (
     is   => 'rw',
     lazy => 1,
-    default => sub { Resque::ExceptionHandler->new( resque => $_[0] ) },
+    default => sub { Resque::Failures->new( resque => $_[0] ) },
     handles => [qw/ throw /]
 );
 
@@ -315,81 +320,6 @@ __DATA__
 
     return true
   end
-
-  # This method can be used to conveniently remove a job from a queue.
-  # It assumes the class you're passing it is a real Ruby class (not
-  # a string or reference) which either:
-  #
-  #   a) has a @queue ivar set
-  #   b) responds to `queue`
-  #
-  # If either of those conditions are met, it will use the value obtained
-  # from performing one of the above operations to determine the queue.
-  #
-  # If no queue can be inferred this method will raise a `Resque::NoQueueError`
-  #
-  # If no args are given, this method will dequeue *all* jobs matching
-  # the provided class. See `Resque::Job.destroy` for more
-  # information.
-  #
-  # Returns the number of jobs destroyed.
-  #
-  # Example:
-  #
-  #   # Removes all jobs of class `UpdateNetworkGraph`
-  #   Resque.dequeue(GitHub::Jobs::UpdateNetworkGraph)
-  #
-  #   # Removes all jobs of class `UpdateNetworkGraph` with matching args.
-  #   Resque.dequeue(GitHub::Jobs::UpdateNetworkGraph, 'repo:135325')
-  #
-  # This method is considered part of the `stable` API.
-  def dequeue(klass, *args)
-    # Perform before_dequeue hooks. Don't perform dequeue if any hook returns false
-    before_hooks = Plugin.before_dequeue_hooks(klass).collect do |hook|
-      klass.send(hook, *args)
-    end
-    return if before_hooks.any? { |result| result == false }
-
-    Job.destroy(queue_from_class(klass), klass, *args)
-
-    Plugin.after_dequeue_hooks(klass).each do |hook|
-      klass.send(hook, *args)
-    end
-  end
-
-  # Given a class, try to extrapolate an appropriate queue based on a
-  # class instance variable or `queue` method.
-  def queue_from_class(klass)
-    klass.instance_variable_get(:@queue) ||
-      (klass.respond_to?(:queue) and klass.queue)
-  end
-
-  # This method will return a `Resque::Job` object or a non-true value
-  # depending on whether a job can be obtained. You should pass it the
-  # precise name of a queue: case matters.
-  #
-  # This method is considered part of the `stable` API.
-  def reserve(queue)
-    Job.reserve(queue)
-  end
-
-  # Validates if the given klass could be a valid Resque job
-  #
-  # If no queue can be inferred this method will raise a `Resque::NoQueueError`
-  #
-  # If given klass is nil this method will raise a `Resque::NoClassError`
-  def validate(klass, queue = nil)
-    queue ||= queue_from_class(klass)
-
-    if !queue
-      raise NoQueueError.new("Jobs must be placed onto a queue.")
-    end
-
-    if klass.to_s.empty?
-      raise NoClassError.new("Jobs must be given a class.")
-    end
-  end
-
 
   #
   # worker shortcuts

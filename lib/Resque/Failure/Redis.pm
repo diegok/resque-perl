@@ -9,7 +9,7 @@ sub save {
     my $self = shift;
     my $data = $self->encoder->encode({
         failed_at => $self->failed_at,
-        payload   => $self->job->as_hashref,
+        payload   => $self->job->payload,
         exception => $self->exception,
         error     => $self->error,
         backtrace => $self->backtrace,

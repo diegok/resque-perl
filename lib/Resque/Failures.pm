@@ -1,8 +1,7 @@
-package Resque::ExceptionHandler;
+package Resque::Failures;
 use Any::Moose;
 with 'Resque::Encoder';
 
-use Resque::Failure::Redis;
 use UNIVERSAL::require;
 use Carp;
 
@@ -12,10 +11,13 @@ has resque => (
     handles  => [qw/ redis key /]
 );
 
-has exception_class => (
+has failure_class => (
     is => 'rw', 
     lazy => 1, 
-    default => sub { 'Resque::Failure::Redis'; },
+    default => sub { 
+        'Resque::Failure::Redis'->require || confess $@;
+        'Resque::Failure::Redis'; 
+    },
     trigger => sub {
         my ( $self, $class ) = @_;
         $class->require or confess $@;
@@ -24,7 +26,7 @@ has exception_class => (
 
 sub throw {
     my $self = shift;
-    my $e = $self->exception_class->new( @_, resque => $self->resque );
+    my $e = $self->failure_class->new( @_, resque => $self->resque );
     carp $e;
     $e->save;
 }
@@ -61,10 +63,10 @@ sub requeue {
         $self->key('failed'), $index, 
         $self->encoder->encode($item)
     );
-    $self->resque->push({ 
-        queue => $item->{queue}, 
-        class => $item->{payload}{class}, 
-        args  => $item->{payload}{args}, 
+    $self->resque->push(
+        $item->{queue} => { 
+            class => $item->{payload}{class}, 
+            args  => $item->{payload}{args}, 
     });
 }
 

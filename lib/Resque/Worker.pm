@@ -194,7 +194,7 @@ sub working_on {
         $self->encoder->encode({
             queue   => $job->queue,
             run_at  => DateTime->now->strftime("%Y/%m/%d %H:%M:%S %Z"),
-            payload => $job->as_hashref
+            payload => $job->payload
         })
     );
     $job->worker($self);
