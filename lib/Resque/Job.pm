@@ -11,7 +11,7 @@ use overload '""' => \&stringify;
 =cut
 has resque  => ( 
     is      => 'rw', 
-    handles => [qw/ redis /]
+    handles => [qw/ redis /],
     default => sub { confess "This Resque::Job isn't associated to any Resque system yet!" } 
 );
 
