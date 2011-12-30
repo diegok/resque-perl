@@ -5,7 +5,6 @@ with 'Resque::Encoder';
 use Resque::Stat;
 use POSIX ":sys_wait_h";
 use Sys::Hostname;
-use Unix::PID;
 use Scalar::Util qw(blessed weaken);
 use List::MoreUtils qw{ uniq any };
 use DateTime;
@@ -18,12 +17,18 @@ use overload
     '==' => \&is_equal,
     'eq' => \&is_equal;
 
+=attr resque
+  The L<Resque> object running this worker.
+=cut
 has 'resque' => (
     is       => 'ro',
     required => 1,
     handles  => [qw/ redis key /]
 );
 
+=attr queues
+  Queues this worker should fetch jobs from.
+=cut
 has queues => (
     is      => 'rw',
     isa     => 'ArrayRef',
@@ -31,16 +36,37 @@ has queues => (
     default => sub {[]}
 );
 
+=attr stat
+  See L<Resque::Stat>.
+=cut
 has stat => (
     is      => 'ro',
     lazy    => 1,
     default => sub { Resque::Stat->new( resque => $_[0]->resque ) }
 );
 
-has id => ( is => 'rw', lazy => 1, default => sub { $_[0]->stringify } );
+=attr id
+  Unique identifier for the running worker.
+  Used to set process status all around.
+
+  The worker stringify to this attribute.
+=cut
+has id => ( is => 'rw', lazy => 1, default => sub { $_[0]->_stringify } );
 sub _string { $_[0]->id } # can't point overload to a mo[o|u]se attribute :-(
 
+=attr verbose
+  Set to a true value to make this worker report what's doing while
+  on work().
+=cut
 has verbose   => ( is => 'rw', default => sub {0} );
+
+=attr cant_fork
+  Set it to a true value to stop this worker from fork jobs. 
+
+  By default, the worker will fork the job out and control the 
+  children process. This make the worker more resilient to 
+  memory leaks.
+=cut
 has cant_fork => ( is => 'rw', default => sub {0} );
 
 =attr child
@@ -70,16 +96,26 @@ sub pause           { $_[0]->paused(1) }
 =cut
 sub unpause         { $_[0]->paused(0) }
 
-# Schedule this worker for shutdown. Will finish processing the
-# current job.
+=method shutdown_please
+  Schedule this worker for shutdown. Will finish processing the
+  current job.
+=cut
 sub shutdown_please { 
     print "Shutting down...\n";
     $_[0]->shutdown(1); 
 }
 
-# Kill the child and shutdown immediately.
+=method shutdown_now
+  Kill the child and shutdown immediately.
+=cut
 sub shutdown_now    { $_[0]->shutdown_please && $_[0]->kill_child }
 
+=method work
+  Calling this method will make this worker to start pulling & running jobs
+  from queues().
+
+  This is the main wheel and will run while shutdown() is false.
+=cut
 sub work {
     my $self = shift;
     $self->startup;
@@ -98,6 +134,9 @@ sub work {
     $self->unregister_worker;
 }
 
+=method work_tick
+  Perform() one job and wait till it finish.
+=cut
 sub work_tick {
     my ($self, $job) = @_;
 
@@ -122,23 +161,30 @@ sub work_tick {
     $self->child(0);
 }
 
+
+=method perform
+  Call perform() on the given Resque::Job capturing and reporting
+  any exception.
+=cut
 sub perform {
     my ( $self, $job ) = @_;
     my $ret;
     try {
         $ret = $job->perform;
-        $self->log( sprintf( "done: %s", $job->stringify ) );
+        $self->log( sprintf( "done: %s", $job->id ) );
     }
     catch {
-        $self->log( sprintf( "%s failed: %s", $job->stringify, $_ ) );
+        $self->log( sprintf( "%s failed: %s", $job->id, $_ ) );
         $job->fail($_);
         $self->failed(1);
     };
     $ret;
 }
 
-# Kills the forked child immediately, without remorse. The job it
-# is processing will not be completed.
+=method kill_child
+  Kills the forked child immediately, without remorse. The job it
+  is processing will not be completed.
+=cut
 sub kill_child {
     my $self = shift;
     return unless $self->child;
@@ -152,12 +198,18 @@ sub kill_child {
     }
 }
 
+=method add_queue
+  Add a queue this worker should listen to.
+=cut
 sub add_queue {
     my $self = shift;
     return unless @_;
     $self->queues( [ uniq( @{$self->queues}, @_ ) ] );
 }
 
+=method del_queue
+  Stop listening to the given queue.
+=cut
 sub del_queue {
     my ( $self, $queue ) = @_;
     return unless $queue;
@@ -168,6 +220,10 @@ sub del_queue {
     @{$self->queues( [ grep {$_} map { $_ eq $queue ? undef : $_ } @{$self->queues} ] )};
 }
 
+
+=method next_queue
+  Circular iterator over queues().
+=cut
 sub next_queue {
     my $self = shift;
     if ( @{$self->queues} > 1 ) {
@@ -176,6 +232,9 @@ sub next_queue {
     return $self->queues->[-1];
 }
 
+=method next_queue
+  Pull the next job to be precessed.
+=cut
 sub reserve {
     my $self = shift;
     my $count = 0;
@@ -187,6 +246,9 @@ sub reserve {
     }
 }
 
+=method working_on
+  Set worker and working status on the given L<Resque::Job>. 
+=cut
 sub working_on {
     my ( $self, $job ) = @_;
     $self->redis->set( 
@@ -200,67 +262,82 @@ sub working_on {
     $job->worker($self);
 }
 
+=method done_working
+  Inform the backend this worker has done its current job
+=cut
 sub done_working {
     my $self = shift;
     $self->processed(1);
     $self->redis->del( $self->key( worker => $self->id ) );
 }
 
-# What time did this worker start? Returns an instance of `Time`
+=method started
+  What time did this worker start? 
+  Returns an instance of DateTime.
+  TODO: not working in this release. This is returning
+  a string used internally.
+=cut
 sub started {
     my $self = shift;
     $self->redis->get( $self->key( worker => $self->id => 'started' ) );
     #TODO -> parse datetime and return DT object.
 }
 
-# Tell Redis we've started
+=method set_started
+  Tell Redis we've started
+=cut
 sub set_started {
     my $self = shift;
     $self->redis->set( $self->key( worker => $self->id => 'started' ), DateTime->now->strftime('%Y-%m-%d %H:%M:%S %Z') );
 }
 
-# Returns a hash explaining the Job we're currently processing, if any.
+=method processing
+  Returns a hash explaining the Job we're currently processing, if any.
+=cut
 sub processing {
     my $self = shift;
     eval { $self->encoder->decode( $self->redis->get( $self->key( worker => $self->id ) ) ) } || {};
 }
 
-# Boolean - true if working, false if not
-sub is_working {
-    my $self = shift;
-    $self->state eq 'working';
-}
-
-# Boolean - true if idle, false if not
-sub is_idle {
-    my $self = shift;
-    $self->state eq 'idle';
-}
-
-# Returns a symbol representing the current worker state,
-# which can be either :working or :idle
+# Returns a string representing the current worker state,
+# which can be either working or idle
 sub state {
     my $self = shift;
     $self->redis->exists( $self->key( worker => $self->id ) ) ? 'working' : 'idle';
 }
 
-# The string representation is the same as the id for this worker
-# instance. Can be used with `Worker.find`.
-sub stringify {
+=method is_working
+  Boolean - true if working, false if not
+=cut
+sub is_working {
+    my $self = shift;
+    $self->state eq 'working';
+}
+
+=method is_idle
+  Boolean - true if idle, false if not
+=cut
+sub is_idle {
+    my $self = shift;
+    $self->state eq 'idle';
+}
+
+sub _stringify {
     my $self = shift;
     join ':', hostname, $$, join( ',', @{$self->queues} );
 }
 
-
 # Is this worker the same as another worker?
-sub is_equal {
+sub _is_equal {
     my ($self, $other) = @_;
     $self->id eq $other->id;
 }
 
-# Given a string, sets the procline ($0) and logs.
-# Procline is always in the format of:
-#   resque-VERSION: STRING
+=method procline
+  Given a string, sets the procline ($0) and logs.
+  Procline is always in the format of:
+    resque-VERSION: STRING
+=cut
 sub procline {
     my $self = shift;
     if ( my $str = shift ) {
@@ -269,6 +346,13 @@ sub procline {
     $0;
 }
 
+=method startup
+  Helper method called by work() to:
+  
+  1. register_signal_handlers()
+  2. prune_dead_workers();
+  3. register_worker();
+=cut
 sub startup {
     my $self = shift;
     $0 = 'resque: Starting';
@@ -279,14 +363,16 @@ sub startup {
     $self->register_worker;
 }
 
-# Registers the various signal handlers a worker responds to.
-#
-# TERM: Shutdown immediately, stop processing jobs.
-#  INT: Shutdown immediately, stop processing jobs.
-# QUIT: Shutdown after the current job has finished processing.
-# USR1: Kill the forked child immediately, continue processing jobs.
-# USR2: Don't process any new jobs
-# CONT: Start processing jobs again after a USR2
+=method register_signal_handlers
+  Registers the various signal handlers a worker responds to.
+ 
+  TERM: Shutdown immediately, stop processing jobs.
+   INT: Shutdown immediately, stop processing jobs.
+  QUIT: Shutdown after the current job has finished processing.
+  USR1: Kill the forked child immediately, continue processing jobs.
+  USR2: Don't process any new jobs
+  CONT: Start processing jobs again after a USR2
+=cut
 sub register_signal_handlers {
     my $self = shift;
     weaken $self;
@@ -324,16 +410,18 @@ sub find {
     }
 }
 
-# Looks for any workers which should be running on this server
-# and, if they're not, removes them from Redis.
-#
-# This is a form of garbage collection. If a server is killed by a
-# hard shutdown, power failure, or something else beyond our
-# control, the Resque workers will not die gracefully and therefore
-# will leave stale state information in Redis.
-#
-# By checking the current Redis state against the actual
-# environment, we can determine if Redis is old and clean it up a bit.
+=method prune_dead_workers
+  Looks for any workers which should be running on this server
+  and, if they're not, removes them from Redis.
+ 
+  This is a form of garbage collection. If a server is killed by a
+  hard shutdown, power failure, or something else beyond our
+  control, the Resque workers will not die gracefully and therefore
+  will leave stale state information in Redis.
+ 
+  By checking the current Redis state against the actual
+  environment, we can determine if Redis is old and clean it up a bit.
+=cut
 sub prune_dead_workers {
     my $self = shift;
     my @all_workers   = $self->all;
@@ -347,15 +435,19 @@ sub prune_dead_workers {
     }
 }
 
-# Registers ourself as a worker. Useful when entering the worker
-# lifecycle on startup.
+=method register_worker
+  Registers ourself as a worker. Useful when entering the worker
+  lifecycle on startup.
+=cut
 sub register_worker {
     my $self = shift;
     $self->redis->sadd( $self->key( 'workers'), $self->id );
     $self->set_started;
 }
 
-# Unregisters ourself as a worker. Useful when shutting down.
+=method register_worker
+  Unregisters ourself as a worker. Useful when shutting down.
+=cut
 sub unregister_worker {
     my $self = shift;
 
@@ -383,19 +475,35 @@ sub unregister_worker {
     $self->stat->clear("failed:$self");
 }
 
-# Returns an Array of string pids of all the other workers on this
-# machine. Useful when pruning dead workers on startup.
+=method worker_pids
+  Returns an Array of string pids of all the other workers on this
+  machine. Useful when pruning dead workers on startup.
+=cut
 sub worker_pids {
-    my @pids = Unix::PID->new->getpidof('resque.pl'); #FIXME -> is this the command I need to look at?
+    my $self = shift;
+    my @pids;
+    for ( split "\n", `ps axo pid,command | grep resque | grep -v resque-web` ) {
+        if ( m/^(\d+)\s(.+)$/ ) {
+            push @pids, $1;
+        }
+    }
     return wantarray ? @pids : \@pids;
 }
 
+=method log
+  If verbose() is true, this will print to STDERR.
+=cut
+#TODO: add logger() attr to containg a logger object and if set, use that instead of print!
 sub log {
     my $self = shift;
     return unless $self->verbose;
-    print shift, "\n";
+    print STDERR shift, "\n";
 }
 
+=method processed
+  Retrieve from L<Resque::Stat> many jobs has done this worker.
+  Pass a true argument to increment by one.
+=cut
 sub processed {
     my $self = shift;
     if (shift) {
@@ -405,8 +513,10 @@ sub processed {
     $self->stat->get("processed:$self");
 }
 
-# How many failed jobs has this worker seen? Returns an int.
-# Tells Redis we've failed a job.
+=method failed
+  How many failed jobs has this worker seen.
+  Pass a true argument to increment by one.
+=cut
 sub failed {
     my $self = shift;
     if (shift) {

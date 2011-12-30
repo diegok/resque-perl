@@ -15,9 +15,8 @@ has resque  => (
 );
 
 =attr worker
-    Worker running this job.
-    A new worker will be popped up from resque by default.
-
+  Worker running this job.
+  A new worker will be popped up from resque by default.
 =cut
 has worker  => ( 
     is      => 'rw', 
@@ -32,6 +31,7 @@ has worker  => (
 has class   => ( is => 'rw', lazy => 1, default => sub { confess "This job needs a class to do some work." } );
 
 =attr queue
+  Name of the queue this job is or should be.
 =cut
 has queue   => ( 
     is        => 'rw', lazy => 1, 
@@ -40,7 +40,7 @@ has queue   => (
 );
 
 =attr args
-  Array of arguments
+  Array of arguments for this job.
 =cut
 has args    => ( is => 'rw', isa => 'ArrayRef', default => sub {[]} );
 
