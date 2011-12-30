@@ -1,5 +1,3 @@
-=pod
-
 =head1 NAME
 
 Resque - Redis-backed library for creating background jobs, placing them on multiple queues, and processing them later.
@@ -10,13 +8,80 @@ version 0.01
 
 =head1 SYNOPSIS
 
+  First you create a Resque instance where you configure the L<Redis> backend and then you can
+  start sending jobs to be done by workers:
+
+    use Resque;
+
+    my $r = Resque->new( redis => '127.0.0.1:6379' );
+
+    $r->push( my_queue => { 
+        class => 'My::Task', 
+        args => [ 'Hello world!' ]
+    });
+
+  Background jobs can be any perl module that implement a perform() function. The Resque::Job object is
+  passed as the only argument to this function:
+  
+    package My::Task;
+    use strict;
+    use 5.10.0;
+
+    sub perform {
+        my $job = shift;
+        say $job->args->[0];
+    }
+
+    1;
+
+  Finally, you run your jobs by instancing a L<Resque::Worker> and telling it to listen to one or more
+  queues:
+
+    use Resque;
+
+    my $w = Resque->new( redis => '127.0.0.1:6379' )->worker;
+    $w->add_queue('my_queue');
+    $w->work;
+
 =head1 DESCRIPTION
+
+  Resque is a Redis-backed library for creating background jobs, placing them on multiple queues, 
+  and processing them later.
+
+  This library is a perl port of the original Ruby one: L<https://github.com/defunkt/resque>
+  My main goal doing this port is to use the same backend to be able to manage the system using 
+  ruby's resque-server webapp.
+
+  As extracted from the original docs, the main features of Resque are:
+
+  Resque workers can be distributed between multiple machines, support priorities, are resilient to 
+  memory leaks, tell you what they're doing, and expect failure.
+
+  Resque queues are persistent; support constant time, atomic push and pop (thanks to Redis); provide 
+  visibility into their contents; and store jobs as simple JSON hashes.
+
+  The Resque frontend tells you what workers are doing, what workers are not doing, what queues you're 
+  using, what's in those queues, provides general usage stats, and helps you track failures.
+
+  A lot more about Resque can be read on the original blog post: L<http://github.com/blog/542-introducing-resque>
 
 =head1 ATTRIBUTES
 
 =head2 redis
+  Redis instance for this Resque instance.
+  Accept a Redis object or string. When a string is
+  passed in, it will be used as Redis server argument.
 
 =head2 namespace
+  This is useful to run multiple queue systems with the same Redis backend.
+
+  By default 'resque' is used.
+
+=head2 failures
+  Failures handler. See L<Resque::Failures>.
+
+=head2 worker
+  A L<Resque::Worker> on this resque instance.
 
 =head1 METHODS
 
@@ -55,9 +120,6 @@ version 0.01
  
   To get the 3rd page of a 30 item, paginatied list one would use:
     $resque->peek('my_queue', 59, 30)
-
-=head2 list_range
-  Does the dirty work of fetching a range of items from a Redis list.
 
 =head2 queues
   Returns an array of all known Resque queues.
@@ -102,15 +164,49 @@ version 0.01
   Build a Resque::Job object on this system for the given
   hashref(see Resque::Job) or string(payload for object).
 
-=head2 keys
-  Returns an array of all known Resque keys in Redis. Redis' KEYS operation
-  is O(N) for the keyspace, so be careful - this can be slow for big databases.
-
 =head2 key
   Concatenate $self->namespace with the received array of names
   to build a redis key name for this resque instance.
 
+=head2 keys
+  Returns an array of all known Resque keys in Redis. Redis' KEYS operation
+  is O(N) for the keyspace, so be careful - this can be slow for big databases.
+
+=head2 flush_namespace
+  This method will delete every trace of this Resque system on
+  the redis() backend.
+
+=head2 list_range
+  Does the dirty work of fetching a range of items from a Redis list.
+
+=head1 ATTRIBUTES
+
 =head1 Queue manipulation
+
+=head1 HELPER METHODS
+
+=head1 BUGS
+
+  This is an early release, so probable there are plenty of bugs around.
+  If you found one, please report it on RT or at the github repo:
+
+  L<https://github.com/diegok/resque-perl>
+
+  Pull requests are also very welcomed, but please include tests demostrating
+  what you've fixed.
+
+=head1 TODO
+
+=for :list * A generic runner for attaching workers to queues.
+* Implement all or most of the callbacks the ruby library has.
+* Find a way to test worker fork and signal handling.
+* Improve docs.
+
+=head1 SEE ALSO
+
+=for :list * L<Gearman> 
+* L<TheSchwartz> 
+* L<Queue::Q4M>
 
 =head1 AUTHOR
 
