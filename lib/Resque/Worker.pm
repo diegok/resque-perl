@@ -14,11 +14,11 @@ use Try::Tiny;
 
 use overload 
     '""' => \&_string,
-    '==' => \&is_equal,
-    'eq' => \&is_equal;
+    '==' => \&_is_equal,
+    'eq' => \&_is_equal;
 
 =attr resque
-  The L<Resque> object running this worker.
+The L<Resque> object running this worker.
 =cut
 has 'resque' => (
     is       => 'ro',
@@ -27,7 +27,7 @@ has 'resque' => (
 );
 
 =attr queues
-  Queues this worker should fetch jobs from.
+Queues this worker should fetch jobs from.
 =cut
 has queues => (
     is      => 'rw',
@@ -37,7 +37,7 @@ has queues => (
 );
 
 =attr stat
-  See L<Resque::Stat>.
+See L<Resque::Stat>.
 =cut
 has stat => (
     is      => 'ro',
@@ -46,59 +46,59 @@ has stat => (
 );
 
 =attr id
-  Unique identifier for the running worker.
-  Used to set process status all around.
+Unique identifier for the running worker.
+Used to set process status all around.
 
-  The worker stringify to this attribute.
+The worker stringify to this attribute.
 =cut
 has id => ( is => 'rw', lazy => 1, default => sub { $_[0]->_stringify } );
 sub _string { $_[0]->id } # can't point overload to a mo[o|u]se attribute :-(
 
 =attr verbose
-  Set to a true value to make this worker report what's doing while
-  on work().
+Set to a true value to make this worker report what's doing while
+on work().
 =cut
 has verbose   => ( is => 'rw', default => sub {0} );
 
 =attr cant_fork
-  Set it to a true value to stop this worker from fork jobs. 
+Set it to a true value to stop this worker from fork jobs. 
 
-  By default, the worker will fork the job out and control the 
-  children process. This make the worker more resilient to 
-  memory leaks.
+By default, the worker will fork the job out and control the 
+children process. This make the worker more resilient to 
+memory leaks.
 =cut
 has cant_fork => ( is => 'rw', default => sub {0} );
 
 =attr child
-  PID of current running child.
+PID of current running child.
 =cut
 has child    => ( is => 'rw' );
 
 =attr shutdown
-  When true, this worker will shutdown after finishing current job.
+When true, this worker will shutdown after finishing current job.
 =cut
 has shutdown => ( is => 'rw', default => sub{0} );
 
 =attr paused
-  When true, this worker won't proccess more jobs till false.
+When true, this worker won't proccess more jobs till false.
 =cut
 has paused   => ( is => 'rw', default => sub{0} );
 has interval => ( is => 'rw', default => sub{5} );
 
 =method pause
-  Stop processing jobs after the current one has completed (if we're
-  currently running one).
+Stop processing jobs after the current one has completed (if we're
+currently running one).
 =cut
 sub pause           { $_[0]->paused(1) }
 
 =method pause
-  Start processing jobs again after a pause
+Start processing jobs again after a pause
 =cut
 sub unpause         { $_[0]->paused(0) }
 
 =method shutdown_please
-  Schedule this worker for shutdown. Will finish processing the
-  current job.
+Schedule this worker for shutdown. Will finish processing the
+current job.
 =cut
 sub shutdown_please { 
     print "Shutting down...\n";
@@ -106,15 +106,15 @@ sub shutdown_please {
 }
 
 =method shutdown_now
-  Kill the child and shutdown immediately.
+Kill the child and shutdown immediately.
 =cut
 sub shutdown_now    { $_[0]->shutdown_please && $_[0]->kill_child }
 
 =method work
-  Calling this method will make this worker to start pulling & running jobs
-  from queues().
+Calling this method will make this worker to start pulling & running jobs
+from queues().
 
-  This is the main wheel and will run while shutdown() is false.
+This is the main wheel and will run while shutdown() is false.
 =cut
 sub work {
     my $self = shift;
@@ -135,7 +135,7 @@ sub work {
 }
 
 =method work_tick
-  Perform() one job and wait till it finish.
+Perform() one job and wait till it finish.
 =cut
 sub work_tick {
     my ($self, $job) = @_;
@@ -163,8 +163,8 @@ sub work_tick {
 
 
 =method perform
-  Call perform() on the given Resque::Job capturing and reporting
-  any exception.
+Call perform() on the given Resque::Job capturing and reporting
+any exception.
 =cut
 sub perform {
     my ( $self, $job ) = @_;
@@ -182,8 +182,8 @@ sub perform {
 }
 
 =method kill_child
-  Kills the forked child immediately, without remorse. The job it
-  is processing will not be completed.
+Kills the forked child immediately, without remorse. The job it
+is processing will not be completed.
 =cut
 sub kill_child {
     my $self = shift;
@@ -199,7 +199,7 @@ sub kill_child {
 }
 
 =method add_queue
-  Add a queue this worker should listen to.
+Add a queue this worker should listen to.
 =cut
 sub add_queue {
     my $self = shift;
@@ -208,7 +208,7 @@ sub add_queue {
 }
 
 =method del_queue
-  Stop listening to the given queue.
+Stop listening to the given queue.
 =cut
 sub del_queue {
     my ( $self, $queue ) = @_;
@@ -222,7 +222,7 @@ sub del_queue {
 
 
 =method next_queue
-  Circular iterator over queues().
+Circular iterator over queues().
 =cut
 sub next_queue {
     my $self = shift;
@@ -233,7 +233,7 @@ sub next_queue {
 }
 
 =method next_queue
-  Pull the next job to be precessed.
+Pull the next job to be precessed.
 =cut
 sub reserve {
     my $self = shift;
@@ -247,7 +247,7 @@ sub reserve {
 }
 
 =method working_on
-  Set worker and working status on the given L<Resque::Job>. 
+Set worker and working status on the given L<Resque::Job>. 
 =cut
 sub working_on {
     my ( $self, $job ) = @_;
@@ -263,7 +263,7 @@ sub working_on {
 }
 
 =method done_working
-  Inform the backend this worker has done its current job
+Inform the backend this worker has done its current job
 =cut
 sub done_working {
     my $self = shift;
@@ -272,10 +272,10 @@ sub done_working {
 }
 
 =method started
-  What time did this worker start? 
-  Returns an instance of DateTime.
-  TODO: not working in this release. This is returning
-  a string used internally.
+What time did this worker start? 
+Returns an instance of DateTime.
+TODO: not working in this release. This is returning
+a string used internally.
 =cut
 sub started {
     my $self = shift;
@@ -284,7 +284,7 @@ sub started {
 }
 
 =method set_started
-  Tell Redis we've started
+Tell Redis we've started
 =cut
 sub set_started {
     my $self = shift;
@@ -292,22 +292,24 @@ sub set_started {
 }
 
 =method processing
-  Returns a hash explaining the Job we're currently processing, if any.
+Returns a hash explaining the Job we're currently processing, if any.
 =cut
 sub processing {
     my $self = shift;
     eval { $self->encoder->decode( $self->redis->get( $self->key( worker => $self->id ) ) ) } || {};
 }
 
-# Returns a string representing the current worker state,
-# which can be either working or idle
+=method state
+Returns a string representing the current worker state,
+which can be either working or idle
+=cut
 sub state {
     my $self = shift;
     $self->redis->exists( $self->key( worker => $self->id ) ) ? 'working' : 'idle';
 }
 
 =method is_working
-  Boolean - true if working, false if not
+Boolean - true if working, false if not
 =cut
 sub is_working {
     my $self = shift;
@@ -315,7 +317,7 @@ sub is_working {
 }
 
 =method is_idle
-  Boolean - true if idle, false if not
+Boolean - true if idle, false if not
 =cut
 sub is_idle {
     my $self = shift;
@@ -334,8 +336,8 @@ sub _is_equal {
 }
 
 =method procline
-  Given a string, sets the procline ($0) and logs.
-  Procline is always in the format of:
+Given a string, sets the procline ($0) and logs.
+Procline is always in the format of:
     resque-VERSION: STRING
 =cut
 sub procline {
@@ -347,7 +349,7 @@ sub procline {
 }
 
 =method startup
-  Helper method called by work() to:
+Helper method called by work() to:
   
   1. register_signal_handlers()
   2. prune_dead_workers();
@@ -364,14 +366,14 @@ sub startup {
 }
 
 =method register_signal_handlers
-  Registers the various signal handlers a worker responds to.
+Registers the various signal handlers a worker responds to.
  
-  TERM: Shutdown immediately, stop processing jobs.
-   INT: Shutdown immediately, stop processing jobs.
-  QUIT: Shutdown after the current job has finished processing.
-  USR1: Kill the forked child immediately, continue processing jobs.
-  USR2: Don't process any new jobs
-  CONT: Start processing jobs again after a USR2
+ TERM: Shutdown immediately, stop processing jobs.
+  INT: Shutdown immediately, stop processing jobs.
+ QUIT: Shutdown after the current job has finished processing.
+ USR1: Kill the forked child immediately, continue processing jobs.
+ USR2: Don't process any new jobs
+ CONT: Start processing jobs again after a USR2
 =cut
 sub register_signal_handlers {
     my $self = shift;
@@ -411,16 +413,16 @@ sub find {
 }
 
 =method prune_dead_workers
-  Looks for any workers which should be running on this server
-  and, if they're not, removes them from Redis.
+Looks for any workers which should be running on this server
+and, if they're not, removes them from Redis.
  
-  This is a form of garbage collection. If a server is killed by a
-  hard shutdown, power failure, or something else beyond our
-  control, the Resque workers will not die gracefully and therefore
-  will leave stale state information in Redis.
+This is a form of garbage collection. If a server is killed by a
+hard shutdown, power failure, or something else beyond our
+control, the Resque workers will not die gracefully and therefore
+will leave stale state information in Redis.
  
-  By checking the current Redis state against the actual
-  environment, we can determine if Redis is old and clean it up a bit.
+By checking the current Redis state against the actual
+environment, we can determine if Redis is old and clean it up a bit.
 =cut
 sub prune_dead_workers {
     my $self = shift;
@@ -436,8 +438,8 @@ sub prune_dead_workers {
 }
 
 =method register_worker
-  Registers ourself as a worker. Useful when entering the worker
-  lifecycle on startup.
+Registers ourself as a worker. Useful when entering the worker
+lifecycle on startup.
 =cut
 sub register_worker {
     my $self = shift;
@@ -446,7 +448,7 @@ sub register_worker {
 }
 
 =method register_worker
-  Unregisters ourself as a worker. Useful when shutting down.
+Unregisters ourself as a worker. Useful when shutting down.
 =cut
 sub unregister_worker {
     my $self = shift;
@@ -476,8 +478,8 @@ sub unregister_worker {
 }
 
 =method worker_pids
-  Returns an Array of string pids of all the other workers on this
-  machine. Useful when pruning dead workers on startup.
+Returns an Array of string pids of all the other workers on this
+machine. Useful when pruning dead workers on startup.
 =cut
 sub worker_pids {
     my $self = shift;
@@ -491,7 +493,7 @@ sub worker_pids {
 }
 
 =method log
-  If verbose() is true, this will print to STDERR.
+If verbose() is true, this will print to STDERR.
 =cut
 #TODO: add logger() attr to containg a logger object and if set, use that instead of print!
 sub log {
@@ -501,8 +503,8 @@ sub log {
 }
 
 =method processed
-  Retrieve from L<Resque::Stat> many jobs has done this worker.
-  Pass a true argument to increment by one.
+Retrieve from L<Resque::Stat> many jobs has done this worker.
+Pass a true argument to increment by one.
 =cut
 sub processed {
     my $self = shift;
@@ -514,8 +516,8 @@ sub processed {
 }
 
 =method failed
-  How many failed jobs has this worker seen.
-  Pass a true argument to increment by one.
+How many failed jobs has this worker seen.
+Pass a true argument to increment by one.
 =cut
 sub failed {
     my $self = shift;

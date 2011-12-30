@@ -15,8 +15,8 @@ has resque  => (
 );
 
 =attr worker
-  Worker running this job.
-  A new worker will be popped up from resque by default.
+Worker running this job.
+A new worker will be popped up from resque by default.
 =cut
 has worker  => ( 
     is      => 'rw', 
@@ -26,12 +26,12 @@ has worker  => (
 );
 
 =attr class
-  Class to be performed by this job.
+Class to be performed by this job.
 =cut
 has class   => ( is => 'rw', lazy => 1, default => sub { confess "This job needs a class to do some work." } );
 
 =attr queue
-  Name of the queue this job is or should be.
+Name of the queue this job is or should be.
 =cut
 has queue   => ( 
     is        => 'rw', lazy => 1, 
@@ -40,15 +40,15 @@ has queue   => (
 );
 
 =attr args
-  Array of arguments for this job.
+Array of arguments for this job.
 =cut
 has args    => ( is => 'rw', isa => 'ArrayRef', default => sub {[]} );
 
 =attr payload
-  HashRef representation of the job.
-  When passed to constructor, this will restore the job from encoded state.
-  When passed as a string this will be coerced using JSON decoder.
-  This is read-only.
+HashRef representation of the job.
+When passed to constructor, this will restore the job from encoded state.
+When passed as a string this will be coerced using JSON decoder.
+This is read-only.
 =cut
 coerce 'HashRef' 
     => from 'Str' 
@@ -70,7 +70,7 @@ has payload => (
 );
 
 =method encode
-  String representation(JSON) to be used on the backend.
+String representation(JSON) to be used on the backend.
 =cut
 sub encode {
     my $self = shift;
@@ -87,11 +87,11 @@ sub stringify {
 }
 
 =method queue_from_class
-  Normalize class name to be used as queue name.
+Normalize class name to be used as queue name.
   
-  NOTE: future versions will try to get the
-        queue name from the real class attr
-        or $class::queue global variable.
+    NOTE: future versions will try to get the
+          queue name from the real class attr
+          or $class::queue global variable.
 =cut
 sub queue_from_class {
     my $self = shift;
@@ -101,6 +101,8 @@ sub queue_from_class {
 }
 
 =method perform
+Load job class and call perform() on it.
+This job objet will be passed as the only argument.
 =cut
 sub perform {
     my $self = shift;
@@ -113,8 +115,8 @@ sub perform {
 }
 
 =method enqueue
-  Add this job to resque.
-  See Rescue::push().
+Add this job to resque.
+See Rescue::push().
 =cut
 sub enqueue {
     my $self = shift;
@@ -122,12 +124,12 @@ sub enqueue {
 }
 
 =method dequeue
-  Remove this job from resque using the most restrictive
-  form of Resque::mass_dequeue.
-  This method will remove all jobs matching this 
-  object queue, class and args.
+Remove this job from resque using the most restrictive
+form of Resque::mass_dequeue.
+This method will remove all jobs matching this 
+object queue, class and args.
 
-  See Resque::mass_dequeue() for massive destruction. 
+See Resque::mass_dequeue() for massive destruction. 
 =cut
 sub dequeue {
     my $self = shift;
@@ -138,6 +140,9 @@ sub dequeue {
     });
 }
 
+=method fail
+Store a failure on this job.
+=cut
 sub fail {
     my ( $self, $error ) = @_;
 

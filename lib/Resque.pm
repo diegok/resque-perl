@@ -11,8 +11,8 @@ use Resque::Failures;
 
 =head1 SYNOPSIS
 
-  First you create a Resque instance where you configure the L<Redis> backend and then you can
-  start sending jobs to be done by workers:
+First you create a Resque instance where you configure the L<Redis> backend and then you can
+start sending jobs to be done by workers:
 
     use Resque;
 
@@ -23,8 +23,8 @@ use Resque::Failures;
         args => [ 'Hello world!' ]
     });
 
-  Background jobs can be any perl module that implement a perform() function. The Resque::Job object is
-  passed as the only argument to this function:
+Background jobs can be any perl module that implement a perform() function. The Resque::Job object is
+passed as the only argument to this function:
   
     package My::Task;
     use strict;
@@ -37,8 +37,8 @@ use Resque::Failures;
 
     1;
 
-  Finally, you run your jobs by instancing a L<Resque::Worker> and telling it to listen to one or more
-  queues:
+Finally, you run your jobs by instancing a L<Resque::Worker> and telling it to listen to one or more
+queues:
 
     use Resque;
 
@@ -48,34 +48,34 @@ use Resque::Failures;
 
 =head1 DESCRIPTION
 
-  Resque is a Redis-backed library for creating background jobs, placing them on multiple queues, 
-  and processing them later.
+Resque is a Redis-backed library for creating background jobs, placing them on multiple queues, 
+and processing them later.
 
-  This library is a perl port of the original Ruby one: L<https://github.com/defunkt/resque>
-  My main goal doing this port is to use the same backend to be able to manage the system using 
-  ruby's resque-server webapp.
+This library is a perl port of the original Ruby one: L<https://github.com/defunkt/resque>
+My main goal doing this port is to use the same backend to be able to manage the system using 
+ruby's resque-server webapp.
 
-  As extracted from the original docs, the main features of Resque are:
+As extracted from the original docs, the main features of Resque are:
 
-  Resque workers can be distributed between multiple machines, support priorities, are resilient to 
-  memory leaks, tell you what they're doing, and expect failure.
+Resque workers can be distributed between multiple machines, support priorities, are resilient to 
+memory leaks, tell you what they're doing, and expect failure.
 
-  Resque queues are persistent; support constant time, atomic push and pop (thanks to Redis); provide 
-  visibility into their contents; and store jobs as simple JSON hashes.
+Resque queues are persistent; support constant time, atomic push and pop (thanks to Redis); provide 
+visibility into their contents; and store jobs as simple JSON hashes.
 
-  The Resque frontend tells you what workers are doing, what workers are not doing, what queues you're 
-  using, what's in those queues, provides general usage stats, and helps you track failures.
+The Resque frontend tells you what workers are doing, what workers are not doing, what queues you're 
+using, what's in those queues, provides general usage stats, and helps you track failures.
 
-  A lot more about Resque can be read on the original blog post: L<http://github.com/blog/542-introducing-resque>
+A lot more about Resque can be read on the original blog post: L<http://github.com/blog/542-introducing-resque>
 
 =cut
 
 =head1 ATTRIBUTES
 
 =attr redis
-  Redis instance for this Resque instance.
-  Accept a Redis object or string. When a string is
-  passed in, it will be used as Redis server argument.
+Redis instance for this Resque instance.
+Accept a Redis object or string. When a string is
+passed in, it will be used as Redis server argument.
 =cut
 subtype 'Sugar::Redis' 
     => as class_type('Redis');
@@ -92,14 +92,14 @@ has redis => (
 );
 
 =attr namespace
-  This is useful to run multiple queue systems with the same Redis backend.
+This is useful to run multiple queue systems with the same Redis backend.
 
-  By default 'resque' is used.
+By default 'resque' is used.
 =cut
 has namespace => ( is => 'rw', default => sub { 'resque' } );
 
 =attr failures
-  Failures handler. See L<Resque::Failures>.
+Failures handler. See L<Resque::Failures>.
 =cut
 has failures => (
     is   => 'rw',
@@ -109,7 +109,7 @@ has failures => (
 );
 
 =attr worker
-  A L<Resque::Worker> on this resque instance.
+A L<Resque::Worker> on this resque instance.
 =cut
 has worker => (
     is      => 'ro',
@@ -120,15 +120,15 @@ has worker => (
 =head1 Queue manipulation
 
 =method push
-  Pushes a job onto a queue. Queue name should be a string and the
-  item should be a Resque::Job object or a hashref containing:
+Pushes a job onto a queue. Queue name should be a string and the
+item should be a Resque::Job object or a hashref containing:
  
-    class - The String name of the job class to run.
-     args - Any arrayref of arguments to pass the job.
+ class - The String name of the job class to run.
+  args - Any arrayref of arguments to pass the job.
  
-  Returns redis response.
+Returns redis response.
 
-  Example
+Example
  
     $resque->push( archive => { class => 'Archive', args => [ 35, 'tar' ] } )
 =cut
@@ -141,9 +141,9 @@ sub push {
 }
 
 =method pop
-  Pops a job off a queue. Queue name should be a string.
+Pops a job off a queue. Queue name should be a string.
  
-  Returns a Resque::Job object.
+Returns a Resque::Job object.
 =cut
 sub pop {
     my ( $self, $queue ) = @_;
@@ -157,8 +157,8 @@ sub pop {
 }
 
 =method size
-  Returns the size of a queue.
-  Queue name should be a string.
+Returns the size of a queue.
+Queue name should be a string.
 =cut
 sub size {
     my ( $self, $queue ) = @_;
@@ -166,17 +166,17 @@ sub size {
 }
 
 =method peek
-  Returns an array of jobs currently queued. 
+Returns an array of jobs currently queued. 
 
-  First argument is queue name and an optional secound and third are
-  start and count values that can be used for pagination.
-  start is the item to begin, count is how many items to return.
+First argument is queue name and an optional secound and third are
+start and count values that can be used for pagination.
+start is the item to begin, count is how many items to return.
 
-  Passing a negative count argument will set a stop value instead
-  of count. So, passing -1 will return full list, -2 all but last
-  element and so on.
+Passing a negative count argument will set a stop value instead
+of count. So, passing -1 will return full list, -2 all but last
+element and so on.
  
-  To get the 3rd page of a 30 item, paginatied list one would use:
+To get the 3rd page of a 30 item, paginatied list one would use:
     $resque->peek('my_queue', 59, 30)
 =cut
 sub peek {
@@ -190,7 +190,7 @@ sub peek {
 }
 
 =method queues
-  Returns an array of all known Resque queues.
+Returns an array of all known Resque queues.
 =cut
 sub queues {
     my $self = shift;
@@ -199,7 +199,7 @@ sub queues {
 }
 
 =method remove_queue
-  Given a queue name, completely deletes the queue.
+Given a queue name, completely deletes the queue.
 =cut
 sub remove_queue {
     my ( $self, $queue ) = @_;
@@ -208,27 +208,27 @@ sub remove_queue {
 }
 
 =method mass_dequeue
-  Removes all matching jobs from a queue. Expects a hashref 
-  with queue name, a class name, and, optionally, args.
-  
-  Returns the number of jobs destroyed.
-  
-  If no args are provided, it will remove all jobs of the class
-  provided.
+Removes all matching jobs from a queue. Expects a hashref 
+with queue name, a class name, and, optionally, args.
 
-  That is, for these two jobs:
+Returns the number of jobs destroyed.
+
+If no args are provided, it will remove all jobs of the class
+provided.
+
+That is, for these two jobs:
 
   { 'class' => 'UpdateGraph', 'args' => ['perl'] }
   { 'class' => 'UpdateGraph', 'args' => ['ruby'] }
   
-  The following call will remove both:
+The following call will remove both:
     
     $rescue->mass_dequeue({ 
         queue => 'test', 
         class => 'UpdateGraph' 
     });
     
-  Whereas specifying args will only remove the 2nd job:
+Whereas specifying args will only remove the 2nd job:
     
     $rescue->mass_dequeue({ 
         queue => 'test', 
@@ -236,9 +236,9 @@ sub remove_queue {
         args  => ['ruby'] 
     });
     
-  Using this method without args can be potentially very slow and 
-  memory intensive, depending on the size of your queue, as it loads 
-  all jobs into an array before processing.
+Using this method without args can be potentially very slow and 
+memory intensive, depending on the size of your queue, as it loads 
+all jobs into an array before processing.
 =cut
 sub mass_dequeue {
     my ( $self, $target ) = @_;
@@ -264,8 +264,8 @@ sub mass_dequeue {
 }
 
 =method new_job
-  Build a Resque::Job object on this system for the given
-  hashref(see Resque::Job) or string(payload for object).
+Build a Resque::Job object on this system for the given
+hashref(see Resque::Job) or string(payload for object).
 =cut
 sub new_job {
     my ( $self, $job ) = @_;
@@ -282,8 +282,8 @@ sub new_job {
 =head1 HELPER METHODS
 
 =method key
-  Concatenate $self->namespace with the received array of names
-  to build a redis key name for this resque instance.
+Concatenate $self->namespace with the received array of names
+to build a redis key name for this resque instance.
 =cut
 sub key {
     my $self = shift;
@@ -291,8 +291,8 @@ sub key {
 }
 
 =method keys
-  Returns an array of all known Resque keys in Redis. Redis' KEYS operation
-  is O(N) for the keyspace, so be careful - this can be slow for big databases.
+Returns an array of all known Resque keys in Redis. Redis' KEYS operation
+is O(N) for the keyspace, so be careful - this can be slow for big databases.
 =cut
 sub keys {
     my $self = shift;
@@ -301,8 +301,8 @@ sub keys {
 }
 
 =method flush_namespace
-  This method will delete every trace of this Resque system on
-  the redis() backend.
+This method will delete every trace of this Resque system on
+the redis() backend.
 =cut
 sub flush_namespace {
     my $self = shift;
@@ -313,7 +313,7 @@ sub flush_namespace {
 }
 
 =method list_range
-  Does the dirty work of fetching a range of items from a Redis list.
+Does the dirty work of fetching a range of items from a Redis list.
 =cut
 sub list_range {
     my ( $self, $key, $start, $count ) = @_;
@@ -333,13 +333,13 @@ __PACKAGE__->meta->make_immutable();
 
 =head1 BUGS
 
-  This is an early release, so probable there are plenty of bugs around.
-  If you found one, please report it on RT or at the github repo:
+This is an early release, so probable there are plenty of bugs around.
+If you found one, please report it on RT or at the github repo:
 
-  L<https://github.com/diegok/resque-perl>
+L<https://github.com/diegok/resque-perl>
 
-  Pull requests are also very welcomed, but please include tests demostrating
-  what you've fixed.
+Pull requests are also very welcomed, but please include tests demostrating
+what you've fixed.
 
 =head1 TODO
 

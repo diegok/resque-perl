@@ -12,7 +12,7 @@ has resque => (
 );
 
 =method get
-  Returns the int value of a stat, given a string stat name.
+Returns the int value of a stat, given a string stat name.
 =cut
 sub get {
     my ($self, $stat) = @_;
@@ -20,10 +20,10 @@ sub get {
 }
 
 =method incr
-  For a string stat name, increments the stat by one.
+For a string stat name, increments the stat by one.
  
-  Can optionally accept a second int parameter. The stat is then
-  incremented by that amount.
+Can optionally accept a second int parameter. The stat is then
+incremented by that amount.
 =cut
 sub incr {
     my ( $self, $stat, $by ) = @_;
@@ -32,10 +32,10 @@ sub incr {
 }
 
 =method decr
-  For a string stat name, decrements the stat by one.
+For a string stat name, decrements the stat by one.
  
-  Can optionally accept a second int parameter. The stat is then
-  decremented by that amount.
+Can optionally accept a second int parameter. The stat is then
+decremented by that amount.
 =cut
 sub decr {
     my ( $self, $stat, $by ) = @_;
@@ -44,7 +44,7 @@ sub decr {
 }
 
 =method clear
-  Removes a stat from Redis, effectively setting it to 0.
+Removes a stat from Redis, effectively setting it to 0.
 =cut
 sub clear {
     my ( $self, $stat ) = @_;
