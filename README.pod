@@ -1,6 +1,6 @@
-=head1 NAME
+=head1 Resque
 
-Resque - Redis-backed library for creating background jobs, placing them on multiple queues, and processing them later.
+Redis-backed library for creating background jobs, placing them on multiple queues, and processing them later.
 
 =head1 SYNOPSIS
 
