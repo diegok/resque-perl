@@ -6,7 +6,9 @@ with 'Resque::Encoder';
 # ABSTRACT: Redis backend for worker failures
 
 =method save
+
 Method required by L<Resque::Failure> role.
+
 =cut
 sub save {
     my $self = shift;

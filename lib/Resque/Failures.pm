@@ -6,7 +6,9 @@ use UNIVERSAL::require;
 use Carp;
 
 =attr resque
+
 Accessor to the Resque object.
+
 =cut
 has resque => ( 
     is       => 'ro', 
@@ -15,8 +17,10 @@ has resque => (
 );
 
 =attr failure_class
+
 Name of a class consuming the role 'Resque::Failure'.
 By default: Resque::Failure::Redis
+
 =cut
 has failure_class => (
     is => 'rw', 
@@ -32,7 +36,9 @@ has failure_class => (
 );
 
 =method throw
+
 create() a failure on the failure_class() and save() it.
+
 =cut
 sub throw {
     my $self = shift;
@@ -41,7 +47,9 @@ sub throw {
 }
 
 =method create
+
 Create a new failure on the failure_class() backend.
+
 =cut
 sub create {
     my $self = shift;
@@ -49,7 +57,9 @@ sub create {
 }
 
 =method count
+
 How many failures was in all the resque system.
+
 =cut
 sub count {
     my $self = shift;
@@ -57,8 +67,10 @@ sub count {
 }
 
 =method all
+
 Return a range of failures in the same way Resque::peek() does for
 jobs.
+
 =cut
 sub all {
     my ( $self, $start, $count ) = @_;
@@ -70,7 +82,9 @@ sub all {
 }
 
 =method clear
+
 Remove all failures.
+
 =cut
 sub clear {
     my $self = shift;

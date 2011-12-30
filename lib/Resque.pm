@@ -92,14 +92,18 @@ has redis => (
 );
 
 =attr namespace
+
 This is useful to run multiple queue systems with the same Redis backend.
 
 By default 'resque' is used.
+
 =cut
 has namespace => ( is => 'rw', default => sub { 'resque' } );
 
 =attr failures
+
 Failures handler. See L<Resque::Failures>.
+
 =cut
 has failures => (
     is   => 'rw',
@@ -109,7 +113,9 @@ has failures => (
 );
 
 =attr worker
+
 A L<Resque::Worker> on this resque instance.
+
 =cut
 has worker => (
     is      => 'ro',
@@ -120,6 +126,7 @@ has worker => (
 =head1 Queue manipulation
 
 =method push
+
 Pushes a job onto a queue. Queue name should be a string and the
 item should be a Resque::Job object or a hashref containing:
  
@@ -131,6 +138,7 @@ Returns redis response.
 Example
  
     $resque->push( archive => { class => 'Archive', args => [ 35, 'tar' ] } )
+
 =cut
 sub push {
     my ( $self, $queue, $job ) = @_;
@@ -141,9 +149,11 @@ sub push {
 }
 
 =method pop
+
 Pops a job off a queue. Queue name should be a string.
  
 Returns a Resque::Job object.
+
 =cut
 sub pop {
     my ( $self, $queue ) = @_;
@@ -157,8 +167,10 @@ sub pop {
 }
 
 =method size
+
 Returns the size of a queue.
 Queue name should be a string.
+
 =cut
 sub size {
     my ( $self, $queue ) = @_;
@@ -166,6 +178,7 @@ sub size {
 }
 
 =method peek
+
 Returns an array of jobs currently queued. 
 
 First argument is queue name and an optional secound and third are
@@ -178,6 +191,7 @@ element and so on.
  
 To get the 3rd page of a 30 item, paginatied list one would use:
     $resque->peek('my_queue', 59, 30)
+
 =cut
 sub peek {
     my ( $self, $queue, $start, $count ) = @_;
@@ -190,7 +204,9 @@ sub peek {
 }
 
 =method queues
+
 Returns an array of all known Resque queues.
+
 =cut
 sub queues {
     my $self = shift;
@@ -199,7 +215,9 @@ sub queues {
 }
 
 =method remove_queue
+
 Given a queue name, completely deletes the queue.
+
 =cut
 sub remove_queue {
     my ( $self, $queue ) = @_;
@@ -208,6 +226,7 @@ sub remove_queue {
 }
 
 =method mass_dequeue
+
 Removes all matching jobs from a queue. Expects a hashref 
 with queue name, a class name, and, optionally, args.
 
@@ -239,6 +258,7 @@ Whereas specifying args will only remove the 2nd job:
 Using this method without args can be potentially very slow and 
 memory intensive, depending on the size of your queue, as it loads 
 all jobs into an array before processing.
+
 =cut
 sub mass_dequeue {
     my ( $self, $target ) = @_;
@@ -264,8 +284,10 @@ sub mass_dequeue {
 }
 
 =method new_job
+
 Build a Resque::Job object on this system for the given
 hashref(see Resque::Job) or string(payload for object).
+
 =cut
 sub new_job {
     my ( $self, $job ) = @_;
@@ -282,8 +304,10 @@ sub new_job {
 =head1 HELPER METHODS
 
 =method key
+
 Concatenate $self->namespace with the received array of names
 to build a redis key name for this resque instance.
+
 =cut
 sub key {
     my $self = shift;
@@ -291,8 +315,10 @@ sub key {
 }
 
 =method keys
+
 Returns an array of all known Resque keys in Redis. Redis' KEYS operation
 is O(N) for the keyspace, so be careful - this can be slow for big databases.
+
 =cut
 sub keys {
     my $self = shift;
@@ -301,8 +327,10 @@ sub keys {
 }
 
 =method flush_namespace
+
 This method will delete every trace of this Resque system on
 the redis() backend.
+
 =cut
 sub flush_namespace {
     my $self = shift;
@@ -313,7 +341,9 @@ sub flush_namespace {
 }
 
 =method list_range
+
 Does the dirty work of fetching a range of items from a Redis list.
+
 =cut
 sub list_range {
     my ( $self, $key, $start, $count ) = @_;
