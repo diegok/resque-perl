@@ -60,6 +60,8 @@ around error => sub {
     return $self->$orig($value);
 };
 
+=method stringify
+=cut
 sub stringify { $_[0]->error }
 
 1;

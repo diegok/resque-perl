@@ -386,32 +386,6 @@ sub register_signal_handlers {
     $SIG{CONT} = sub { $self->unpause };
 }
 
-# Model methods
-
-sub all {
-    my $self = shift;
-    my @w = grep {$_} map { $self->find($_) } $self->redis->smembers( $self->key('workers') );
-    return wantarray ? @w : \@w;
-}
-
-sub exists {
-    my ($self, $worker_id) = @_;
-    $self->redis->sismember( $self->key( 'workers' ), $worker_id );
-}
-
-# Returns a single worker object. Accepts a string id.
-sub find {
-    my ( $self, $worker_id ) = @_;
-    if ( $self->exists( $worker_id ) ) {
-        my @queues = split ',', (split( ':', $worker_id))[-1];
-        return __PACKAGE__->new( 
-            resque => $self->resque,
-            queues => \@queues,
-            id     => $worker_id
-        );
-    }
-}
-
 =method prune_dead_workers
 Looks for any workers which should be running on this server
 and, if they're not, removes them from Redis.
@@ -526,6 +500,38 @@ sub failed {
         $self->stat->incr("failed:$self");
     }
     $self->stat->get("failed:$self");
+}
+
+=method find
+Returns a single worker object. Accepts a string id.
+=cut
+sub find {
+    my ( $self, $worker_id ) = @_;
+    if ( $self->exists( $worker_id ) ) {
+        my @queues = split ',', (split( ':', $worker_id))[-1];
+        return __PACKAGE__->new( 
+            resque => $self->resque,
+            queues => \@queues,
+            id     => $worker_id
+        );
+    }
+}
+
+=method all
+Returns all worker registered on the backend.
+=cut
+sub all {
+    my $self = shift;
+    my @w = grep {$_} map { $self->find($_) } $self->redis->smembers( $self->key('workers') );
+    return wantarray ? @w : \@w;
+}
+
+=method exists
+Returns true if the given worker id exists on redis() backend.
+=cut
+sub exists {
+    my ($self, $worker_id) = @_;
+    $self->redis->sismember( $self->key( 'workers' ), $worker_id );
 }
 
 __PACKAGE__->meta->make_immutable();

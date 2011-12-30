@@ -77,6 +77,8 @@ sub encode {
     $self->encoder->encode( $self->payload );
 }
 
+=method stringify
+=cut
 sub stringify {
     my $self = shift;
     sprintf( "(Job{%s} | %s | %s)", 
