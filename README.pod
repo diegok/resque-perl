@@ -45,6 +45,7 @@ Resque is a Redis-backed library for creating background jobs, placing them on m
 and processing them later.
 
 This library is a perl port of the original Ruby one: L<https://github.com/defunkt/resque>
+
 My main goal doing this port is to use the same backend to be able to manage the system using 
 ruby's resque-server webapp.
 
