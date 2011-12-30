@@ -73,9 +73,11 @@ A lot more about Resque can be read on the original blog post: L<http://github.c
 =head1 ATTRIBUTES
 
 =attr redis
+
 Redis instance for this Resque instance.
 Accept a Redis object or string. When a string is
 passed in, it will be used as Redis server argument.
+
 =cut
 subtype 'Sugar::Redis' 
     => as class_type('Redis');
