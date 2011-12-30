@@ -171,10 +171,10 @@ sub perform {
     my $ret;
     try {
         $ret = $job->perform;
-        $self->log( sprintf( "done: %s", $job->id ) );
+        $self->log( sprintf( "done: %s", $job->stringify ) );
     }
     catch {
-        $self->log( sprintf( "%s failed: %s", $job->id, $_ ) );
+        $self->log( sprintf( "%s failed: %s", $job->stringify, $_ ) );
         $job->fail($_);
         $self->failed(1);
     };

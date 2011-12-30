@@ -13,7 +13,7 @@ sub save {
         exception => $self->exception,
         error     => $self->error,
         backtrace => $self->backtrace,
-        worker    => $self->worker->stringify,
+        worker    => $self->worker->id,
         queue     => $self->queue
     });
     $self->resque->redis->rpush( $self->resque->key( 'failed' ), $data );
