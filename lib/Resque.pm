@@ -11,9 +11,66 @@ use Resque::Failures;
 
 =head1 SYNOPSIS
 
+  First you create a Resque instance where you configure the L<Redis> backend and then you can
+  start sending jobs to be done by workers:
+
+    use Resque;
+
+    my $r = Resque->new( redis => '127.0.0.1:6379' );
+
+    $r->push( my_queue => { 
+        class => 'My::Task', 
+        args => [ 'Hello world!' ]
+    });
+
+  Background jobs can be any perl module that implement a perform() function. The Resque::Job object is
+  passed as the only argument to this function:
+  
+    package My::Task;
+    use strict;
+    use 5.10.0;
+
+    sub perform {
+        my $job = shift;
+        say $job->args->[0];
+    }
+
+    1;
+
+  Finally, you run your jobs by instancing a L<Resque::Worker> and telling it to listen to one or more
+  queues:
+
+    use Resque;
+
+    my $w = Resque->new( redis => '127.0.0.1:6379' )->worker;
+    $w->add_queue('my_queue');
+    $w->work;
+
 =head1 DESCRIPTION
 
+  Resque is a Redis-backed library for creating background jobs, placing them on multiple queues, 
+  and processing them later.
+
+  This library is a perl port of the original Ruby one: L<https://github.com/defunkt/resque>
+  My main goal doing this port is to use the same backend to be able to manage the system using 
+  ruby's resque-server webapp.
+
+  As extracted from the original docs, the main features of Resque are:
+
+  Resque workers can be distributed between multiple machines, support priorities, are resilient to 
+  memory leaks, tell you what they're doing, and expect failure.
+
+  Resque queues are persistent; support constant time, atomic push and pop (thanks to Redis); provide 
+  visibility into their contents; and store jobs as simple JSON hashes.
+
+  The Resque frontend tells you what workers are doing, what workers are not doing, what queues you're 
+  using, what's in those queues, provides general usage stats, and helps you track failures.
+
+  A lot more about Resque can be read on the original blog post: L<http://github.com/blog/542-introducing-resque>
+
 =cut
+
+=head1 ATTRIBUTES
 
 =attr redis
   Redis instance for this Resque instance.
@@ -35,14 +92,14 @@ has redis => (
 );
 
 =attr namespace
+  This is useful to run multiple queue systems with the same Redis backend.
+
   By default 'resque' is used.
-  This is useful to run multiple queue systems with the
-  same Redis backend.
 =cut
 has namespace => ( is => 'rw', default => sub { 'resque' } );
 
 =attr failures
-  Failures handler. See Resque::Failures.
+  Failures handler. See L<Resque::Failures>.
 =cut
 has failures => (
     is   => 'rw',
@@ -52,7 +109,7 @@ has failures => (
 );
 
 =attr worker
-  A Resque::Worker on this resque instance.
+  A L<Resque::Worker> on this resque instance.
 =cut
 has worker => (
     is      => 'ro',
@@ -130,16 +187,6 @@ sub peek {
     );
     $_ = $self->new_job({ queue => $queue, payload => $_ }) for @$jobs;
     return wantarray ? @$jobs : $jobs;
-}
-
-=method list_range
-  Does the dirty work of fetching a range of items from a Redis list.
-=cut
-sub list_range {
-    my ( $self, $key, $start, $count ) = @_;
-    my $stop = $count > 0 ? $start + $count - 1 : $count;
-    my @items =  $self->redis->lrange( $key, $start, $stop );
-    return \@items;
 }
 
 =method queues
@@ -232,22 +279,7 @@ sub new_job {
     confess "Can't build an empty Resque::Job object.";
 }
 
-=method keys
-  Returns an array of all known Resque keys in Redis. Redis' KEYS operation
-  is O(N) for the keyspace, so be careful - this can be slow for big databases.
-=cut
-sub keys {
-    my $self = shift;
-    my @keys = $self->redis->keys( $self->key('*') );
-    return wantarray ? @keys : \@keys;
-}
-
-# Used internally to keep track of which queues we've created.
-# Don't call this directly.
-sub _watch_queue {
-    my ( $self, $queue ) = @_;
-    $self->redis->sadd( $self->key('queues'), $queue );
-}
+=head1 HELPER METHODS
 
 =method key
   Concatenate $self->namespace with the received array of names
@@ -258,6 +290,20 @@ sub key {
     join( ':', $self->namespace, @_ );
 }
 
+=method keys
+  Returns an array of all known Resque keys in Redis. Redis' KEYS operation
+  is O(N) for the keyspace, so be careful - this can be slow for big databases.
+=cut
+sub keys {
+    my $self = shift;
+    my @keys = $self->redis->keys( $self->key('*') );
+    return wantarray ? @keys : \@keys;
+}
+
+=method flush_namespace
+  This method will delete every trace of this Resque system on
+  the redis() backend.
+=cut
 sub flush_namespace {
     my $self = shift;
     if ( my @keys = $self->keys ) {
@@ -266,95 +312,48 @@ sub flush_namespace {
     return 0;
 }
 
+=method list_range
+  Does the dirty work of fetching a range of items from a Redis list.
+=cut
+sub list_range {
+    my ( $self, $key, $start, $count ) = @_;
+    my $stop = $count > 0 ? $start + $count - 1 : $count;
+    my @items =  $self->redis->lrange( $key, $start, $stop );
+    return \@items;
+}
+
+# Used internally to keep track of which queues we've created.
+# Don't call this directly.
+sub _watch_queue {
+    my ( $self, $queue ) = @_;
+    $self->redis->sadd( $self->key('queues'), $queue );
+}
+
 __PACKAGE__->meta->make_immutable();
 
-__DATA__
+=head1 BUGS
 
-  #
-  # job shortcuts
-  #
+  This is an early release, so probable there are plenty of bugs around.
+  If you found one, please report it on RT or at the github repo:
 
-  # This method can be used to conveniently add a job to a queue.
-  # It assumes the class you're passing it is a real Ruby class (not
-  # a string or reference) which either:
-  #
-  #   a) has a @queue ivar set
-  #   b) responds to `queue`
-  #
-  # If either of those conditions are met, it will use the value obtained
-  # from performing one of the above operations to determine the queue.
-  #
-  # If no queue can be inferred this method will raise a `Resque::NoQueueError`
-  #
-  # Returns true if the job was queued, nil if the job was rejected by a
-  # before_enqueue hook.
-  #
-  # This method is considered part of the `stable` API.
-  def enqueue(klass, *args)
-    enqueue_to(queue_from_class(klass), klass, *args)
-  end
+  L<https://github.com/diegok/resque-perl>
 
-  # Just like `enqueue` but allows you to specify the queue you want to
-  # use. Runs hooks.
-  #
-  # `queue` should be the String name of the queue you're targeting.
-  #
-  # Returns true if the job was queued, nil if the job was rejected by a
-  # before_enqueue hook.
-  #
-  # This method is considered part of the `stable` API.
-  def enqueue_to(queue, klass, *args)
-    # Perform before_enqueue hooks. Don't perform enqueue if any hook returns false
-    before_hooks = Plugin.before_enqueue_hooks(klass).collect do |hook|
-      klass.send(hook, *args)
-    end
-    return nil if before_hooks.any? { |result| result == false }
+  Pull requests are also very welcomed, but please include tests demostrating
+  what you've fixed.
 
-    Job.create(queue, klass, *args)
+=head1 TODO
 
-    Plugin.after_enqueue_hooks(klass).each do |hook|
-      klass.send(hook, *args)
-    end
+=for :list
+* A generic runner for attaching workers to queues.
+* Implement all or most of the callbacks the ruby library has.
+* Find a way to test worker fork and signal handling.
+* Improve docs.
 
-    return true
-  end
+=head1 SEE ALSO
 
-  #
-  # worker shortcuts
-  #
+=for :list
+* L<Gearman> 
+* L<TheSchwartz> 
+* L<Queue::Q4M>
 
-  # A shortcut to Worker.all
-  def workers
-    Worker.all
-  end
-
-  # A shortcut to Worker.working
-  def working
-    Worker.working
-  end
-
-  # A shortcut to unregister_worker
-  # useful for command line tool
-  def remove_worker(worker_id)
-    worker = Resque::Worker.find(worker_id)
-    worker.unregister_worker
-  end
-
-  #
-  # stats
-  #
-
-  # Returns a hash, similar to redis-rb's #info, of interesting stats.
-  def info
-    return {
-      :pending   => queues.inject(0) { |m,k| m + size(k) },
-      :processed => Stat[:processed],
-      :queues    => queues.size,
-      :workers   => workers.size.to_i,
-      :working   => working.size,
-      :failed    => Stat[:failed],
-      :servers   => [redis_id],
-      :environment  => ENV['RAILS_ENV'] || ENV['RACK_ENV'] || 'development'
-    }
-  end
-
+=cut
