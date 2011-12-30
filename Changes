@@ -1,6 +1,7 @@
 {{$NEXT}}
 
     - Hope this is the last POD bug. I suck!
+    - Delegate Resque::Job::redis() to resque()
 
 0.03      2011-12-30 18:42:04 Europe/Madrid
 
