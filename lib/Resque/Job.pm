@@ -15,6 +15,9 @@ has resque  => (
 );
 
 =attr worker
+    Worker running this job.
+    A new worker will be popped up from resque by default.
+
 =cut
 has worker  => ( 
     is      => 'rw', 
@@ -24,6 +27,7 @@ has worker  => (
 );
 
 =attr class
+  Class to be performed by this job.
 =cut
 has class   => ( is => 'rw', lazy => 1, default => sub { confess "This job needs a class to do some work." } );
 
@@ -36,6 +40,7 @@ has queue   => (
 );
 
 =attr args
+  Array of arguments
 =cut
 has args    => ( is => 'rw', isa => 'ArrayRef', default => sub {[]} );
 
@@ -134,19 +139,19 @@ sub dequeue {
 }
 
 sub fail {
-    my ( $self, $why ) = @_;
-    #run_failure_hooks(exception)
-    $self->throw($why);
-}
-
-sub throw {
     my ( $self, $error ) = @_;
+
+    my $exception = 'Resque::Failure::Job';
+    if ( ref $error && ref $error eq 'ARRAY' ) {
+        ( $exception, $error ) = @$error; 
+    }
+
     $self->resque->throw(
         job       => $self,
         worker    => $self->worker,
         queue     => $self->queue,
         payload   => $self->payload,
-        exception => 'Resque::Failure::Job',
+        exception => $exception,
         error     => $error
     );
 }

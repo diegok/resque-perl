@@ -125,7 +125,7 @@ sub size {
 sub peek {
     my ( $self, $queue, $start, $count ) = @_;
     my $jobs = $self->list_range( 
-        $queue, 
+        $self->key( queue => $queue ), 
         $start || 0, $count || 1 
     );
     $_ = $self->new_job({ queue => $queue, payload => $_ }) for @$jobs;
@@ -136,11 +136,9 @@ sub peek {
   Does the dirty work of fetching a range of items from a Redis list.
 =cut
 sub list_range {
-    my ( $self, $queue, $start, $count ) = @_;
+    my ( $self, $key, $start, $count ) = @_;
     my $stop = $count > 0 ? $start + $count - 1 : $count;
-    my @items =  $self->redis->lrange(
-        $self->key( queue => $queue ), $start, $stop
-    );
+    my @items =  $self->redis->lrange( $key, $start, $stop );
     return \@items;
 }
 

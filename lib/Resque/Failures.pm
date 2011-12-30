@@ -5,12 +5,19 @@ with 'Resque::Encoder';
 use UNIVERSAL::require;
 use Carp;
 
+=attr resque
+  Accessor to the Resque object.
+=cut
 has resque => ( 
     is       => 'ro', 
     required => 1, 
     handles  => [qw/ redis key /]
 );
 
+=attr failure_class
+  Name of a class consuming the role 'Resque::Failure'.
+  By default: Resque::Failure::Redis
+=cut
 has failure_class => (
     is => 'rw', 
     lazy => 1, 
@@ -24,29 +31,46 @@ has failure_class => (
     }
 );
 
+=method throw
+  create() a failure on the failure_class() and save() it.
+=cut
 sub throw {
     my $self = shift;
-    my $e = $self->failure_class->new( @_, resque => $self->resque );
-    carp $e;
+    my $e = $self->create(@_);
     $e->save;
 }
 
+=method create
+  Create a new failure on the failure_class() backend.
+=cut
+sub create {
+    my $self = shift;
+    $self->failure_class->new( @_, resque => $self->resque );
+}
+
 =method count
+  How many failures was in all the resque system.
 =cut
 sub count {
-    $_[0]->redis->llen('failed')
+    my $self = shift;
+    $self->redis->llen($self->key('failed'));
 }
 
 =method all
+  Return a range of failures in the same way Resque::peek() does for
+  jobs.
 =cut
 sub all {
     my ( $self, $start, $count ) = @_;
-    my $all = $self->resque->list_range('failed', $start, $count);
+    my $all = $self->resque->list_range(
+        $self->key('failed'), $start, $count
+    );
     $_ = $self->encoder->decode( $_ ) for @$all;
     return wantarray ? @$all : $all;
 }
 
 =method clear
+  Remove all failures.
 =cut
 sub clear {
     my $self = shift;
@@ -79,4 +103,5 @@ sub remove {
     $self->redis->lset( $key, $index, $id);
     $self->redis->lrem( $key, 1, $id );
 }
+
 __PACKAGE__->meta->make_immutable();
