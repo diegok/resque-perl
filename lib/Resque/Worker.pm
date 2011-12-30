@@ -91,7 +91,7 @@ currently running one).
 =cut
 sub pause           { $_[0]->paused(1) }
 
-=method pause
+=method unpause
 Start processing jobs again after a pause
 =cut
 sub unpause         { $_[0]->paused(0) }
@@ -232,7 +232,7 @@ sub next_queue {
     return $self->queues->[-1];
 }
 
-=method next_queue
+=method reserve
 Pull the next job to be precessed.
 =cut
 sub reserve {
@@ -421,7 +421,7 @@ sub register_worker {
     $self->set_started;
 }
 
-=method register_worker
+=method unregister_worker
 Unregisters ourself as a worker. Useful when shutting down.
 =cut
 sub unregister_worker {
