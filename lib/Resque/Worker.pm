@@ -532,7 +532,7 @@ sub worker_pids {
     my $self = shift;
     my @pids;
     for ( split "\n", `ps axo pid,command | grep resque | grep -v resque-web` ) {
-        if ( m/^(\d+)\s(.+)$/ ) {
+        if ( m/^\s*(\d+)\s(.+)$/ ) {
             push @pids, $1;
         }
     }
