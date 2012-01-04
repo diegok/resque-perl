@@ -85,7 +85,7 @@ coerce 'Sugar::Redis'
     => from 'Str' 
     => via { 
         my ( $host, $port ) = split /:/;
-        RedisDB->new( server => $host, port => $port ) 
+        RedisDB->new( host => $host, port => $port ) 
     };
 
 has redis => (
