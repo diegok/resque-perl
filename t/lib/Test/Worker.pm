@@ -2,7 +2,6 @@ package # hide from cpan
     Test::Worker;
 
 use strict;
-use 5.10.1;
 
 sub perform {
     my $job = shift;

@@ -605,7 +605,7 @@ Returns all worker registered on the backend.
 =cut
 sub all {
     my $self = shift;
-    my @w = grep {$_} map { $self->find($_) } $self->redis->smembers( $self->key('workers') );
+    my @w = grep {$_} map { $self->find($_) } @{ $self->redis->smembers( $self->key('workers') ) };
     return wantarray ? @w : \@w;
 }
 

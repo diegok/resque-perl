@@ -4,14 +4,14 @@ use Any::Moose '::Util::TypeConstraints';
 
 # ABSTRACT: Redis-backed library for creating background jobs, placing them on multiple queues, and processing them later.
 
-use Redis;
+use RedisDB;
 use Resque::Job;
 use Resque::Worker;
 use Resque::Failures;
 
 =head1 SYNOPSIS
 
-First you create a Resque instance where you configure the L<Redis> backend and then you can
+First you create a Resque instance where you configure the L<RedisDB> backend and then you can
 start sending jobs to be done by workers:
 
     use Resque;
@@ -75,22 +75,25 @@ A lot more about Resque can be read on the original blog post: L<http://github.c
 =attr redis
 
 Redis instance for this Resque instance.
-Accept a Redis object or string. When a string is
+Accept a L<RedisDB> object or string. When a string is
 passed in, it will be used as Redis server argument.
 
 =cut
 subtype 'Sugar::Redis' 
-    => as class_type('Redis');
+    => as class_type('RedisDB');
 coerce 'Sugar::Redis' 
     => from 'Str' 
-    => via { Redis->new( server => $_ ) };
+    => via { 
+        my ( $host, $port ) = split /:/;
+        RedisDB->new( server => $host, port => $port ) 
+    };
 
 has redis => (
     is      => 'ro',
     lazy    => 1,
     coerce  => 1,
     isa     => 'Sugar::Redis',
-    default => sub { Redis->new }
+    default => sub { RedisDB->new }
 );
 
 =attr namespace
@@ -212,8 +215,8 @@ Returns an array of all known Resque queues.
 =cut
 sub queues {
     my $self = shift;
-    my @queues = $self->redis->smembers( $self->key('queues') );
-    return wantarray ? @queues : \@queues;
+    my $queues = $self->redis->smembers( $self->key('queues') );
+    return wantarray ? @$queues : $queues;
 }
 
 =method remove_queue
@@ -275,7 +278,7 @@ sub mass_dequeue {
         $removed += $self->redis->lrem( $queue, 0, $self->new_job($target)->encode );
     }
     else {
-        for my $item ( $self->redis->lrange( $queue, 0, -1 ) ) {
+        for my $item ( @{ $self->redis->lrange( $queue, 0, -1 ) } ) {
             if ( $self->new_job( $item )->class eq $target->{class} ) {
                 $removed += $self->redis->lrem( $queue, 0, $item );
             }
@@ -324,8 +327,8 @@ is O(N) for the keyspace, so be careful - this can be slow for big databases.
 =cut
 sub keys {
     my $self = shift;
-    my @keys = $self->redis->keys( $self->key('*') );
-    return wantarray ? @keys : \@keys;
+    my $keys = $self->redis->keys( $self->key('*') );
+    return wantarray ? @$keys : $keys;
 }
 
 =method flush_namespace
@@ -350,8 +353,8 @@ Does the dirty work of fetching a range of items from a Redis list.
 sub list_range {
     my ( $self, $key, $start, $count ) = @_;
     my $stop = $count > 0 ? $start + $count - 1 : $count;
-    my @items =  $self->redis->lrange( $key, $start, $stop );
-    return \@items;
+    my $items = $self->redis->lrange( $key, $start, $stop );
+    return $items;
 }
 
 # Used internally to keep track of which queues we've created.

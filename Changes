@@ -1,5 +1,12 @@
 {{$NEXT}}
 
+    - Replaced dependency on Redis for RedisDB
+    - Handle redis re-connection thank's to RedisDB
+    - More tests on workerland
+    - Stop requiring 5.10 on test libs
+
+0.05      2012-01-03 20:30:46 Europe/Madrid
+
     - Relaxed regex to catch pid's of running workers
 
 0.04      2011-12-30 22:19:55 Europe/Madrid

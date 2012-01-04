@@ -60,6 +60,12 @@ $r->remove_queue('test');
 is( @{$r->queues}, 0, 'There is no queues after remove_queue()');
 ok( ! $r->pop('test'), "Removed queue's don't pop()" );
 
+# mass dequeue on empty set
+is( $r->mass_dequeue({
+    queue => 'test',
+    class => 'OtherTask'
+}), 0, 'dequeue no jobs on non existant queue' );  
+
 # dequeue
 push_jobs($r);
 is( $r->size('test'), 2, 'Test queue has two jobs again'); 
@@ -74,6 +80,12 @@ is( $r->mass_dequeue({
     class => 'OtherTask'
 }), 2, 'dequeue two jobs' );  
 is( $r->size('test'), 1, 'Test queue has one job'); 
+
+# mass dequeue on non empty without match
+is( $r->mass_dequeue({
+    queue => 'test',
+    class => 'OtherTask'
+}), 0, 'dequeue no jobs on non existant queue' );  
 
 sub push_jobs {
     my $r = shift;

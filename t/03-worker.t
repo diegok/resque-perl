@@ -30,13 +30,18 @@ $r->flush_namespace;
     ok( $worker == $worker, 'Worker respond to ==' );
     ok( $worker eq $worker, 'Worker respond to eq' );
 
+
+    is( @{ $worker->all }, 0, 'No workers registered' );
+    $worker->register_worker;
+    is( @{ $worker->all }, 1, 'One worker registered' );
+
     ok( ! $worker->reserve, 'Nothing to reserve()' );
     push_job($r);
     ok( my $job = $worker->reserve, 'reserve() a job' );
     is( $job->args->[0], 'bazinga!', 'Is first job in first queue' );
     is( $job->queue, 'test2', 'Job object known about queue' );
     ok( ! $job->has_worker, 'No worker set on job' );
-
+    
     $worker->working_on($job);
     ok( $job->has_worker, 'Worker set on job after working_on' );
     is( $worker->processing->{queue}, 'test2', 'processing() know what worker is doing');
@@ -44,6 +49,7 @@ $r->flush_namespace;
     ok( ! $worker->is_idle, 'Worker is not idle' );
     is( $worker->perform($job), 'bazinga!', 'Worker can make a job to perform()');
     $worker->done_working;
+
     ok( !$worker->is_working, 'Worker is not working' );
     ok( $worker->is_idle, 'Worker is idle' );
 
