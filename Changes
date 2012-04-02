@@ -1,5 +1,11 @@
 {{$NEXT}}
 
+    - Back to Redis dependency
+    - Using reconnect facility of Redis module
+    - encoding undef as recommended on Redis docs
+
+0.06      2012-01-04 16:36:08 Europe/Madrid
+
     - Replaced dependency on Redis for RedisDB
     - Handle redis re-connection thank's to RedisDB
     - More tests on workerland
