@@ -1,5 +1,10 @@
 {{$NEXT}}
 
+    - Worker interval attribute accept floating seconds (Time::HiRes::sleep).
+    - Worker interval attribute is documented now.
+
+0.07      2012-04-03 00:39:06 Europe/Madrid
+
     - Back to Redis dependency
     - Using reconnect facility of Redis module
     - encoding undef as recommended on Redis docs
