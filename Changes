@@ -1,5 +1,11 @@
 {{$NEXT}}
 
+    - Fixed and documented requeue method on Resque::Failures
+    - New tests on requeue and remove failures
+    - Updated redis launcher test library (copied from Melo's Redis one)
+
+0.08      2012-04-12 17:05:17 Europe/Madrid
+
     - Worker interval attribute accept floating seconds (Time::HiRes::sleep).
     - Worker interval attribute is documented now.
 

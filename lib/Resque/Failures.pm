@@ -10,9 +10,9 @@ use Carp;
 Accessor to the Resque object.
 
 =cut
-has resque => ( 
-    is       => 'ro', 
-    required => 1, 
+has resque => (
+    is       => 'ro',
+    required => 1,
     handles  => [qw/ redis key /]
 );
 
@@ -23,11 +23,11 @@ By default: Resque::Failure::Redis
 
 =cut
 has failure_class => (
-    is => 'rw', 
-    lazy => 1, 
-    default => sub { 
+    is => 'rw',
+    lazy => 1,
+    default => sub {
         'Resque::Failure::Redis'->require || confess $@;
-        'Resque::Failure::Redis'; 
+        'Resque::Failure::Redis';
     },
     trigger => sub {
         my ( $self, $class ) = @_;
@@ -92,23 +92,36 @@ sub clear {
 }
 
 =method requeue
+
+Requeue by index number.
+
+Failure will be updated to note retried date.
+
 =cut
 sub requeue {
     my ( $self, $index ) = @_;
-    my $item = $self->all($index);
+    my ($item) = $self->all($index, 1);
     $item->{retried_at} = DateTime->now->strftime("%Y/%m/%d %H:%M:%S");
     $self->redis->lset(
-        $self->key('failed'), $index, 
+        $self->key('failed'), $index,
         $self->encoder->encode($item)
     );
     $self->resque->push(
-        $item->{queue} => { 
-            class => $item->{payload}{class}, 
-            args  => $item->{payload}{args}, 
+        $item->{queue} => {
+            class => $item->{payload}{class},
+            args  => $item->{payload}{args},
     });
 }
 
 =method remove
+
+Remove failure by index number in failures queue.
+
+Please note that, when you remove some index, all
+sucesive ones will move left, so index will decrese
+one. If you want to remove several ones start removing
+from the rightmost one.
+
 =cut
 sub remove {
     my ( $self, $index ) = @_;

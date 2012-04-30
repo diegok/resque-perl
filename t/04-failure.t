@@ -2,7 +2,7 @@ use Test::More;
 use Resque;
 use lib 't/lib';
 use Test::SpawnRedisServer;
- 
+
 my ($c, $server) = redis();
 END { $c->() if $c }
 
@@ -19,20 +19,29 @@ $r->flush_namespace;
     is( $r->failures->count, 0, 'There is no failures in all system' );
 
     is( $w->failed, 0, 'No failure reported on this worker' );
-    $w->work_tick($w->reserve);
+    ok( !$w->work_tick($w->reserve), 'Work one time' );
     is( $w->failed, 1, 'One failure reported on this worker' );
-    $w->work_tick($w->reserve);
+    ok( !$w->work_tick($w->reserve), 'Work one time' );
     is( $w->failed, 2, 'Two failure reported on this worker' );
 
-    is( $r->failures->count, 2, 'There was two failures in all system' );
-    is( my @fails = $r->failures->all(0,-1), 2, 'Get all() failures' );
+    is( $r->failures->count, 2, 'There is two failures in all system' );
+
+    ok( $r->failures->remove(0), 'Remove first failure' );
+    is( $r->failures->count, 1, 'There is one failure now' );
+
+    ok( $r->failures->requeue(0), 'Requeue first failure' );
+    ok( !$w->work_tick($w->reserve), 'Call the worker one more time' );
+    is( $w->failed, 3, 'Three failure reported on this worker' );
+    is( my @fails = $r->failures->all(0,-1), 2, 'Get all() two failures' );
+    ok( $fails[0]->{retried_at}, 'First one has been retried' );
+    ok( ! $fails[1]->{retried_at}, 'Seccond one has not been retried' );
 }
 
 sub push_job {
     my $r = shift;
     my $class = shift || 'Test::FailWorker';
-    ok( $r->push( test => { class => $class, args => [ 'ouch!' ] } ),    'Push fail job to test queue' ); 
-    ok( $r->push( test => { class => $class, args => [ 'bazinga!' ] } ), 'Push fail job to test queue' ); 
+    ok( $r->push( test => { class => $class, args => [ 'ouch!' ] } ),    'Push fail job to test queue' );
+    ok( $r->push( test => { class => $class, args => [ 'bazinga!' ] } ), 'Push fail job to test queue' );
 }
 
 done_testing();
