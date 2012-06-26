@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <meta charset='utf-8' />
+    <meta http-equiv="X-UA-Compatible" content="chrome=1" />
+    <meta name="description" content="Resque for perl : Perl port of the original Ruby library. It's intended to work using the same backend to share tasks and be able to manage the system using ruby's resque-server webapp. Resque is a Redis-backed library for creating background jobs, placing them on multiple queues, and processing them later." />
+
+    <link rel="stylesheet" type="text/css" media="screen" href="stylesheets/stylesheet.css">
+
+    <title>Resque for perl</title>
+  </head>
+
+  <body>
+
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/diegok/resque-perl">View on GitHub</a>
+
+          <h1 id="project_title">Resque for perl</h1>
+          <h2 id="project_tagline">Perl port of the original Ruby library. It's intended to work using the same backend to share tasks and be able to manage the system using ruby's resque-server webapp. Resque is a Redis-backed library for creating background jobs, placing them on multiple queues, and processing them later.</h2>
+
+            <section id="downloads">
+              <a class="zip_download_link" href="https://github.com/diegok/resque-perl/zipball/master">Download this project as a .zip file</a>
+              <a class="tar_download_link" href="https://github.com/diegok/resque-perl/tarball/master">Download this project as a tar.gz file</a>
+            </section>
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+        <h3>Install</h3>
+
+<p>This module is available from <a href="https://metacpan.org/module/Resque">CPAN</a>, you can install it like any other perl module:</p>
+
+<pre><code>$ cpanm Resque
+</code></pre>
+
+<h3>Usage</h3>
+
+<p>First you create a Resque instance where you configure the L backend and then you can
+start sending jobs to be done by workers:</p>
+
+<div class="highlight">
+<pre>    <span class="k">use</span> <span class="n">Resque</span><span class="p">;</span>
+
+    <span class="k">my</span> <span class="nv">$r</span> <span class="o">=</span> <span class="n">Resque</span><span class="o">-&gt;</span><span class="k">new</span><span class="p">(</span> <span class="n">redis</span> <span class="o">=&gt;</span> <span class="s">'127.0.0.1:6379'</span> <span class="p">);</span>
+
+    <span class="nv">$r</span><span class="o">-&gt;</span><span class="nb">push</span><span class="p">(</span> <span class="n">my_queue</span> <span class="o">=&gt;</span> <span class="p">{</span> 
+        <span class="n">class</span> <span class="o">=&gt;</span> <span class="s">'My::Task'</span><span class="p">,</span> 
+        <span class="n">args</span> <span class="o">=&gt;</span> <span class="p">[</span> <span class="s">'Hello world!'</span> <span class="p">]</span>
+    <span class="p">});</span>
+</pre>
+</div>
+
+
+<p>Background jobs can be any perl module that implement a perform() function. The Resque::Job object is
+passed as the only argument to this function:</p>
+
+<div class="highlight">
+<pre>    <span class="nb">package</span> <span class="nn">My::</span><span class="n">Task</span><span class="p">;</span>
+    <span class="k">use</span> <span class="n">strict</span><span class="p">;</span>
+    <span class="k">use</span> <span class="n">v5</span><span class="mf">.10</span><span class="p">;</span>
+
+    <span class="k">sub </span><span class="nf">perform</span> <span class="p">{</span>
+        <span class="k">my</span> <span class="nv">$job</span> <span class="o">=</span> <span class="nb">shift</span><span class="p">;</span>
+        <span class="n">say</span> <span class="nv">$job</span><span class="o">-&gt;</span><span class="n">args</span><span class="o">-&gt;</span><span class="p">[</span><span class="mi">0</span><span class="p">];</span>
+    <span class="p">}</span>
+
+    <span class="mi">1</span><span class="p">;</span>
+</pre>
+</div>
+
+
+<p>Finally, you run your jobs by instancing a L<a>Resque::Worker</a> and telling it to listen to one or more
+queues:</p>
+
+<div class="highlight">
+<pre>    <span class="k">use</span> <span class="n">Resque</span><span class="p">;</span>
+
+    <span class="k">my</span> <span class="nv">$w</span> <span class="o">=</span> <span class="n">Resque</span><span class="o">-&gt;</span><span class="k">new</span><span class="p">(</span> <span class="n">redis</span> <span class="o">=&gt;</span> <span class="s">'127.0.0.1:6379'</span> <span class="p">)</span><span class="o">-&gt;</span><span class="n">worker</span><span class="p">;</span>
+    <span class="nv">$w</span><span class="o">-&gt;</span><span class="n">add_queue</span><span class="p">(</span><span class="s">'my_queue'</span><span class="p">);</span>
+    <span class="nv">$w</span><span class="o">-&gt;</span><span class="n">work</span><span class="p">;</span>
+</pre>
+</div>
+
+
+<h3>Description</h3>
+
+<p>Resque is a Redis-backed library for creating background jobs, placing them on multiple queues, 
+and processing them later.</p>
+
+<p>This library is a perl port of the original Ruby one: <a href="https://github.com/defunkt/resque">https://github.com/defunkt/resque</a></p>
+
+<p>My main goal doing this port is to use the same backend to be able to manage the system using 
+ruby's resque-server webapp.</p>
+
+<p>As extracted from the original docs, the main features of Resque are:</p>
+
+<p>Resque workers can be distributed between multiple machines, support priorities, are resilient to 
+memory leaks, tell you what they're doing, and expect failure.</p>
+
+<p>Resque queues are persistent; support constant time, atomic push and pop (thanks to Redis); provide 
+visibility into their contents; and store jobs as simple JSON hashes.</p>
+
+<p>The Resque frontend tells you what workers are doing, what workers are not doing, what queues you're 
+using, what's in those queues, provides general usage stats, and helps you track failures.</p>
+
+<p>A lot more about Resque can be read on the original blog post: <a href="http://github.com/blog/542-introducing-resque">http://github.com/blog/542-introducing-resque</a></p>
+      </section>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p class="copyright">Resque for perl maintained by <a href="https://github.com/diegok">diegok</a></p>
+        <p>Published with <a href="http://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+
+    
+
+  </body>
+</html>
