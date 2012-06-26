@@ -1,4 +1,4 @@
-=head1 Resque (for perl)
+=head1 Resque for perl
 
 Redis-backed library for creating background jobs, placing them on multiple queues, and processing them later.
 
