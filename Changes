@@ -1,5 +1,7 @@
 {{$NEXT}}
 
+0.11      2012-06-27 13:34:37 Europe/Madrid
+
     - Fixed Worker::worker_pids() to also filter grep's own pid!
 
 0.10      2012-06-27 13:11:34 Europe/Madrid
