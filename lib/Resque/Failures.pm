@@ -1,6 +1,7 @@
 package Resque::Failures;
 use Any::Moose;
 with 'Resque::Encoder';
+# ABSTRACT: Class for managing Resque failures
 
 use UNIVERSAL::require;
 use Carp;
