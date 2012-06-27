@@ -543,7 +543,7 @@ sub worker_pids {
                 ? 'ps -A -o pid,args'
                 : 'ps -A -o pid,command';
 
-    for ( split "\n", `$ps_command | grep resque | grep -v resque-web` ) {
+    for ( split "\n", `$ps_command | grep resque | grep -v resque-web | grep -v grep` ) {
         if ( m/^\s*(\d+)\s(.+)$/ ) {
             push @pids, $1;
         }
