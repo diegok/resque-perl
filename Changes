@@ -1,5 +1,9 @@
 {{$NEXT}}
 
+    - Fixed Worker::worker_pids() to support solaris
+
+0.09      2012-04-30 11:27:49 Europe/Madrid
+
     - Fixed and documented requeue method on Resque::Failures
     - New tests on requeue and remove failures
     - Updated redis launcher test library (copied from Melo's Redis one)

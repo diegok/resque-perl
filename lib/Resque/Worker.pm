@@ -538,7 +538,12 @@ machine. Useful when pruning dead workers on startup.
 sub worker_pids {
     my $self = shift;
     my @pids;
-    for ( split "\n", `ps axo pid,command | grep resque | grep -v resque-web` ) {
+
+    my $ps_command = $^O eq 'solaris'
+                ? 'ps -A -o pid,args'
+                : 'ps -A -o pid,command';
+
+    for ( split "\n", `$ps_command | grep resque | grep -v resque-web` ) {
         if ( m/^\s*(\d+)\s(.+)$/ ) {
             push @pids, $1;
         }

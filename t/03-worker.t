@@ -2,7 +2,7 @@ use Test::More;
 use Resque;
 use lib 't/lib';
 use Test::SpawnRedisServer;
- 
+
 my ($c, $server) = redis();
 END { $c->() if $c }
 
@@ -41,7 +41,7 @@ $r->flush_namespace;
     is( $job->args->[0], 'bazinga!', 'Is first job in first queue' );
     is( $job->queue, 'test2', 'Job object known about queue' );
     ok( ! $job->has_worker, 'No worker set on job' );
-    
+
     $worker->working_on($job);
     ok( $job->has_worker, 'Worker set on job after working_on' );
     is( $worker->processing->{queue}, 'test2', 'processing() know what worker is doing');
@@ -61,6 +61,10 @@ $r->flush_namespace;
     ok( !$worker->is_working, 'Worker is not working' );
     ok( $worker->is_idle, 'Worker is idle' );
     ok( ! $worker->reserve, 'No more jobs on any queue' );
+
+    # Ensure worker_pids() is on on this platform!
+    my @this_pid = grep { $_ == $$ } $worker->worker_pids;
+    is(@this_pid, 1, 'Test PID returned by worker_pids()');
 }
 
 sub push_job {
