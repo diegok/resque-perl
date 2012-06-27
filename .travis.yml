@@ -4,6 +4,6 @@ perl:
   - "5.12"
   - "5.10"
 before_install:
-  - "cpanm --notest Dist::Zilla"
+  - "cpanm --notest Dist::Zilla Pod::Elemental::Transformer::List"
 install: "dzil authordeps | xargs cpanm --notest && dzil listdeps | xargs cpanm --notest"
 script: "dzil test --release"

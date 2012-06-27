@@ -1,5 +1,7 @@
 {{$NEXT}}
 
+0.10      2012-06-27 13:11:34 Europe/Madrid
+
     - Fixed Worker::worker_pids() to support solaris
 
 0.09      2012-04-30 11:27:49 Europe/Madrid
