@@ -22,6 +22,7 @@ sub save {
         queue     => $self->queue
     });
     $self->resque->redis->rpush( $self->resque->key( 'failed' ), $data );
+    $self->resque->redis->incr( $self->resque->key("stat:failed:" . $self->worker->id));
 }
 
 __PACKAGE__->meta->make_immutable;
