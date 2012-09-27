@@ -1,10 +1,13 @@
 package Resque::Stat;
+use 5.010001;
 use Any::Moose;
 
 # ABSTRACT: The stat subsystem. Used to keep track of integer counts.
 
 =attr resque
+
 =cut
+
 has resque => (
     is       => 'ro',
     required => 1,
@@ -16,6 +19,7 @@ has resque => (
 Returns the int value of a stat, given a string stat name.
 
 =cut
+
 sub get {
     my ($self, $stat) = @_;
     $self->redis->get( $self->key( stat => $stat ) ) || 0;
@@ -29,9 +33,10 @@ Can optionally accept a second int parameter. The stat is then
 incremented by that amount.
 
 =cut
+
 sub incr {
     my ( $self, $stat, $by ) = @_;
-    $by ||= 1;
+    $by //= 1;
     $self->redis->incrby( $self->key( stat => $stat ), $by );
 }
 
@@ -43,6 +48,7 @@ Can optionally accept a second int parameter. The stat is then
 decremented by that amount.
 
 =cut
+
 sub decr {
     my ( $self, $stat, $by ) = @_;
     $by ||= 1;
@@ -54,6 +60,7 @@ sub decr {
 Removes a stat from Redis, effectively setting it to 0.
 
 =cut
+
 sub clear {
     my ( $self, $stat ) = @_;
     $self->redis->del( $self->key( stat => $stat ) );
