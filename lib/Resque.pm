@@ -366,10 +366,9 @@ what you've fixed.
 =head1 TODO
 
 =for :list
+* Improve docs for plugin authors
 * A generic runner for attaching workers to queues.
-* Implement all or most of the callbacks the ruby library has.
 * Find a way to test worker fork and signal handling.
-* Improve docs.
 
 =head1 SEE ALSO
 
