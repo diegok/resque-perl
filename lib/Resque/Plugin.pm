@@ -2,6 +2,8 @@ package Resque::Plugin;
 use Moose();
 use Moose::Exporter;
 
+# ABSTRACT: Syntactic sugar for Resque plugin's
+
 Moose::Exporter->setup_import_methods(
     with_meta => ['add_to'],
     also      => 'Moose',
