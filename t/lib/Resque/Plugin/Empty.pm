@@ -1,5 +1,4 @@
 package Resque::Plugin::Empty;
-use Moose;
-with 'Resque::Plugin';
+use Resque::Plugin;
 
 1;

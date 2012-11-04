@@ -24,7 +24,7 @@ This is L<Resque::Worker> with all plugin/roles applied to it.
 has worker_class => (
     is   => 'ro',
     lazy => 1,
-    default => sub { 'Resque::Worker' }
+    default => sub { $_[0]->_class_with_roles('Resque::Worker' => 'worker') }
 );
 
 =attr job_class
@@ -34,26 +34,35 @@ This is L<Resque::Job> with all plugin/roles applied to it.
 has job_class => (
     is   => 'ro',
     lazy => 1,
-    default => sub { 'Resque::Job' }
+    default => sub { $_[0]->_class_with_roles('Resque::Job' => 'job') }
 );
 
-sub BUILD {
+sub BUILD {} # Ensure it exists!
+after BUILD => sub {
     my $self = shift;
     $self->_load_plugins;
-    if ( my @r = $self->roles_for('resque') ) {
+    $self->meta->make_mutable;
+    if ( my @r = $self->_roles_for('resque') ) {
         apply_all_roles( $self, @r );
     }
-}
+    $self->meta->make_immutable;
+};
 
 # Build anon class based on the given one with optional roles applied 
 sub _class_with_roles {
-    my ( $self, $class ) = ( shift, shift );
-    return $class unless @_;
+    my ( $self, $class, $kind ) = @_;
+    my @roles = $self->_roles_for($kind);
+    load_class($class);
+    return $class unless @roles;
 
     my $meta = Moose::Meta::Class->create_anon_class(
         superclasses => [$class],
-        roles        => [@_] 
+        roles        => [@roles] 
     );
+
+    # ensure anon doesn't goes out of scope!
+    # http://www.nntp.perl.org/group/perl.moose/2008/03/msg132.html
+    $meta->add_method( meta => sub {$meta} );
 
     $meta->make_immutable;
     return $meta->name;
@@ -64,28 +73,28 @@ sub _load_plugins {
 
     my @plugins;
     for my $name ( @{$self->plugins} ) {
-        $name = _expand_plugin_namespace($name);
+        $name = _expand_plugin($name);
         load_class($name);
         my $plugin = $name->new;
-        confess "$name doesn't do Resque::Plugin" unless $plugin->does('Resque::Plugin');
         push @plugins, $plugin;
     }
     $self->plugins(\@plugins);
 }
 
-sub _expand_plugin_namespace {
+sub _expand_plugin {
     my $name = pop;
     $name = $name =~ /^\+(.+)$/ ? $1 : "Resque::Plugin::$name";
     return $name;
 }
 
-sub roles_for {
-    my ( $self, $obj_name ) = @_;
-    my $method_name = "${obj_name}_roles";
+sub _roles_for {
+    my ( $self, $kind ) = @_;
+    my $method_name = "${kind}_roles";
 
     my @roles;
     for my $plugin ( @{$self->plugins} ) {
-        push @roles, @{$plugin->$method_name};
+        push @roles, map {$self->_expand_plugin($_)} @{$plugin->$method_name}
+            if $plugin->can($method_name);
     }
     return @roles;
 }
