@@ -1,9 +1,9 @@
 package Resque::Failures;
-use Any::Moose;
+use Moose;
 with 'Resque::Encoder';
 # ABSTRACT: Class for managing Resque failures
 
-use UNIVERSAL::require;
+use Class::Load qw(load_class);
 use Carp;
 
 =attr resque
@@ -27,12 +27,12 @@ has failure_class => (
     is => 'rw',
     lazy => 1,
     default => sub {
-        'Resque::Failure::Redis'->require || confess $@;
+        load_class('Resque::Failure::Redis');
         'Resque::Failure::Redis';
     },
     trigger => sub {
         my ( $self, $class ) = @_;
-        $class->require or confess $@;
+        load_class($class);
     }
 );
 

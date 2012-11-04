@@ -1,11 +1,12 @@
 package Resque::Job;
-use Any::Moose;
-use Any::Moose '::Util::TypeConstraints';
+use Moose;
+use Moose::Util::TypeConstraints;
 with 'Resque::Encoder';
 
 # ABSTRACT: Resque job container
 
 use overload '""' => \&stringify;
+use Class::Load qw(load_class);
 
 =attr resque
 =cut
@@ -125,7 +126,7 @@ This job objet will be passed as the only argument.
 =cut
 sub perform {
     my $self = shift;
-    $self->class->require || confess $@;
+    load_class($self->class);
     $self->class->can('perform') 
         || confess $self->class . " doesn't know how to perform";
 

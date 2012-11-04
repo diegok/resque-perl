@@ -1,5 +1,5 @@
 package Resque::Worker;
-use Any::Moose;
+use Moose;
 with 'Resque::Encoder';
 
 use Resque::Stat;

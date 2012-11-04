@@ -1,5 +1,5 @@
 package Resque::Stat;
-use Any::Moose;
+use Moose;
 
 # ABSTRACT: The stat subsystem. Used to keep track of integer counts.
 

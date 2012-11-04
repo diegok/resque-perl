@@ -1,5 +1,5 @@
 package Resque::Failure;
-use Any::Moose 'Role';
+use Moose::Role;
 with 'Resque::Encoder';
 
 # ABSTRACT: Role to be consumed by any failure class.

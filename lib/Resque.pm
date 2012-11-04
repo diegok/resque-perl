@@ -1,6 +1,7 @@
 package Resque;
-use Any::Moose;
-use Any::Moose '::Util::TypeConstraints';
+use Moose;
+use Moose::Util::TypeConstraints;
+with 'Resque::Pluggable';
 
 # ABSTRACT: Redis-backed library for creating background jobs, placing them on multiple queues, and processing them later.
 
@@ -99,18 +100,14 @@ has redis => (
 );
 
 =attr namespace
-
 This is useful to run multiple queue systems with the same Redis backend.
 
 By default 'resque' is used.
-
 =cut
 has namespace => ( is => 'rw', default => sub { 'resque' } );
 
 =attr failures
-
 Failures handler. See L<Resque::Failures>.
-
 =cut
 has failures => (
     is   => 'rw',
@@ -120,14 +117,13 @@ has failures => (
 );
 
 =attr worker
-
 A L<Resque::Worker> on this resque instance.
-
+It can have plugin/roles applied. See L<Resque::Pluggable>.
 =cut
 has worker => (
     is      => 'ro',
     lazy    => 1,
-    default => sub { Resque::Worker->new( resque => $_[0] ) }
+    default => sub { $_[0]->worker_class->new( resque => $_[0] ) }
 );
 
 =head1 Queue manipulation
@@ -136,14 +132,14 @@ has worker => (
 
 Pushes a job onto a queue. Queue name should be a string and the
 item should be a Resque::Job object or a hashref containing:
- 
+
  class - The String name of the job class to run.
   args - Any arrayref of arguments to pass the job.
- 
+
 Returns redis response.
 
 Example
- 
+
     $resque->push( archive => { class => 'Archive', args => [ 35, 'tar' ] } )
 
 =cut
@@ -156,11 +152,9 @@ sub push {
 }
 
 =method pop
-
 Pops a job off a queue. Queue name should be a string.
- 
-Returns a Resque::Job object.
 
+Returns a Resque::Job object.
 =cut
 sub pop {
     my ( $self, $queue ) = @_;
@@ -174,10 +168,8 @@ sub pop {
 }
 
 =method size
-
 Returns the size of a queue.
 Queue name should be a string.
-
 =cut
 sub size {
     my ( $self, $queue ) = @_;
@@ -211,9 +203,7 @@ sub peek {
 }
 
 =method queues
-
 Returns an array of all known Resque queues.
-
 =cut
 sub queues {
     my $self = shift;
@@ -222,9 +212,7 @@ sub queues {
 }
 
 =method remove_queue
-
 Given a queue name, completely deletes the queue.
-
 =cut
 sub remove_queue {
     my ( $self, $queue ) = @_;
@@ -291,19 +279,20 @@ sub mass_dequeue {
 }
 
 =method new_job
+Build a L<Resque::Job> object on this system for the given
+hashref or string(payload for object).
 
-Build a Resque::Job object on this system for the given
-hashref(see Resque::Job) or string(payload for object).
-
+L<Resque::Job> class can be extended thru roles/plugins. 
+See L<Resque::Pluggable>.
 =cut
 sub new_job {
     my ( $self, $job ) = @_;
 
     if ( $job && ref $job && ref $job eq 'HASH' ) { 
-         return Resque::Job->new({ resque => $self, %$job }); 
+         return $self->job_class->new({ resque => $self, %$job }); 
     }
     elsif ( $job ) {
-        return Resque::Job->new({ resque => $self, payload => $job });
+        return $self->job_class->new({ resque => $self, payload => $job });
     }
     confess "Can't build an empty Resque::Job object.";
 }
@@ -311,10 +300,8 @@ sub new_job {
 =head1 HELPER METHODS
 
 =method key
-
 Concatenate $self->namespace with the received array of names
 to build a redis key name for this resque instance.
-
 =cut
 sub key {
     my $self = shift;
@@ -322,10 +309,8 @@ sub key {
 }
 
 =method keys
-
 Returns an array of all known Resque keys in Redis. Redis' KEYS operation
 is O(N) for the keyspace, so be careful - this can be slow for big databases.
-
 =cut
 sub keys {
     my $self = shift;

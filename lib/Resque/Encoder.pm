@@ -1,8 +1,8 @@
 package Resque::Encoder;
-use Any::Moose 'Role';
+use Moose::Role;
 use JSON;
 
-# ABSTRACT: Any::Moose role for encoding Resque structures
+# ABSTRACT: Moose role for encoding Resque structures
 
 =attr encoder
 

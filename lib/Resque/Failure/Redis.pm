@@ -1,5 +1,5 @@
 package Resque::Failure::Redis;
-use Any::Moose;
+use Moose;
 with 'Resque::Failure';
 with 'Resque::Encoder';
 
