@@ -2,10 +2,11 @@ package # hide from cpan
     Test::FailWorker;
 
 use strict;
+use Carp;
 
 sub perform {
     my $job = shift;
-    die "Bye bye cruel world!";
+    Carp::confess "Bye bye cruel world!";
 }
 
 1;
