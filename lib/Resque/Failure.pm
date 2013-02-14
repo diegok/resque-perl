@@ -47,7 +47,8 @@ has exception => (
 );
 
 has error     => ( is => 'rw', isa => 'Str', required => 1 );
-has backtrace => ( is => 'rw', isa => 'Str' ); 
+# ruby 'resque-web' expect backtrace is array.
+has backtrace => ( is => 'rw', isa => 'ArrayRef[Str]' );
 
 around error => sub {
     my $orig = shift;
@@ -56,9 +57,16 @@ around error => sub {
     return $self->$orig() unless @_;
 
     my ( $value, @stack ) = split "\n", shift;
-    $self->backtrace( join "\n", @stack );
+    $self->backtrace( \@stack );
     return $self->$orig($value);
 };
+
+sub BUILD {
+    my $self = shift;
+    if ( (my $error = $self->error) =~ /\n/ ) {
+        $self->error($error);
+    }
+}
 
 =method stringify
 =cut

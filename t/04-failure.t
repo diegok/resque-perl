@@ -35,6 +35,9 @@ $r->flush_namespace;
     is( my @fails = $r->failures->all(0,-1), 2, 'Get all() two failures' );
     ok( $fails[0]->{retried_at}, 'First one has been retried' );
     ok( ! $fails[1]->{retried_at}, 'Seccond one has not been retried' );
+    ok( $fails[0]->{backtrace}, 'parse error and set backtrace' ) or diag explain $fails[0];
+    ok( ref $fails[0]->{backtrace} eq 'ARRAY', 'backtrace is ArrayRef. for resque-web' );
+    ok( $fails[0]->{error} !~ /\n/, '$fail->{error} have no "\n"') or diag $fails[0]->{error};
 }
 
 sub push_job {
