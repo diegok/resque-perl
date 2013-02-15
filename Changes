@@ -1,7 +1,8 @@
 {{$NEXT}}
 
     - Moved to Moose (from Any::Moose)
-    - New plugin system to allow Resque, Resque::Worker and Resque::Job roles (experimental)
+    - New plugin system to allow Resque, Resque::Worker and Resque::Job roles (experimental and under documented)
+    - Store properly exceptions backtrace on Failure (Yusuke Watase)
 
 0.11      2012-06-27 13:34:37 Europe/Madrid
 
