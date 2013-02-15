@@ -37,6 +37,9 @@ has job_class => (
     default => sub { $_[0]->_class_with_roles('Resque::Job' => 'job') }
 );
 
+=method BUILD
+Apply pluggable roles after BUILD.
+=cut
 sub BUILD {} # Ensure it exists!
 after BUILD => sub {
     my $self = shift;

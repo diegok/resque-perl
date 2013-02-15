@@ -61,6 +61,8 @@ around error => sub {
     return $self->$orig($value);
 };
 
+=method BUILD
+=cut
 sub BUILD {
     my $self = shift;
     if ( (my $error = $self->error) =~ /\n/ ) {
