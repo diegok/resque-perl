@@ -2,6 +2,7 @@ package Resque::Worker;
 use Moose;
 with 'Resque::Encoder';
 
+use FindBin; # so it will work after playing around $0
 use Resque::Stat;
 use POSIX ":sys_wait_h";
 use Sys::Hostname;

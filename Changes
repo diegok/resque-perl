@@ -1,5 +1,9 @@
 {{$NEXT}}
 
+    - Added support to use libs that use FindBin on worker classes
+
+0.12      2013-02-15 02:50:41 Europe/Madrid
+
     - Moved to Moose (from Any::Moose)
     - New plugin system to allow Resque, Resque::Worker and Resque::Job roles (experimental and under documented)
     - Store properly exceptions backtrace on Failure (Yusuke Watase)
