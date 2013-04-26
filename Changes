@@ -1,5 +1,7 @@
 {{$NEXT}}
 
+0.13      2013-03-07 15:51:47 Europe/Madrid
+
     - Added support to use libs that use FindBin on worker classes
 
 0.12      2013-02-15 02:50:41 Europe/Madrid
