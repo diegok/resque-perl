@@ -20,9 +20,6 @@ $r->flush_namespace;
     is( @{$worker->queues}, 1, 'Worker still listen to one queue' );
     ok( $worker->add_queue( 'test2', 'test3' ), 'Add two more queues' );
     is( @{$worker->queues}, 3, 'Worker has 3 queues' );
-    for my $name (qw/ test test2 test3 test /) {
-        is( $worker->next_queue, $name, 'Order of queues is ok and roundtrip' )
-    }
     is( $worker->del_queue( 'test' ), 1, 'Delete one queue' );
     is( @{$worker->queues}, 2, 'Worker has 2 queues' );
     is( $worker->del_queue( 'test' ), 0, 'Delete nothing' );
@@ -54,7 +51,10 @@ $r->flush_namespace;
     ok( $worker->is_idle, 'Worker is idle' );
 
     ok( $job = $worker->reserve, 'reserve() a job' );
-    is( $job->args->[0], 'ouch!', 'Is first job in seccond queue' );
+    is( $job->args->[0], 'kapow!', 'Is second job in first queue' );
+
+    ok( $job = $worker->reserve, 'reserve() a job' );
+    is( $job->args->[0], 'ouch!', 'Is first job in second queue' );
 
     ok( $worker->cant_fork(1), 'Prevent worker from fork()');
     $worker->work_tick($job);
@@ -72,6 +72,7 @@ sub push_job {
     my $class = shift || 'Test::Worker';
     ok( $r->push( test3 => { class => $class, args => [ 'ouch!' ] } ),    'Push new job to test3 queue' ); 
     ok( $r->push( test2 => { class => $class, args => [ 'bazinga!' ] } ), 'Push new job to test2 queue' ); 
+    ok( $r->push( test2 => { class => $class, args => [ 'kapow!' ] } ), 'Push another new job to test2 queue' ); 
 }
 
 done_testing();

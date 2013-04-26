@@ -266,20 +266,6 @@ sub del_queue {
     @{$self->queues( [ grep {$_} map { $_ eq $queue ? undef : $_ } @{$self->queues} ] )};
 }
 
-
-=method next_queue
-
-Circular iterator over queues().
-
-=cut
-sub next_queue {
-    my $self = shift;
-    if ( @{$self->queues} > 1 ) {
-        push @{$self->queues}, shift @{$self->queues};
-    }
-    return $self->queues->[-1];
-}
-
 =method reserve
 
 Pull the next job to be precessed.
@@ -288,7 +274,7 @@ Pull the next job to be precessed.
 sub reserve {
     my $self = shift;
     my $count = 0;
-    while ( my $queue = $self->next_queue ) {
+    for my $queue ( @{$self->queues} ) {
         if ( my $job = $self->resque->pop($queue) ) {
             return $job;
         }
