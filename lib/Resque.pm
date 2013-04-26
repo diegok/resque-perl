@@ -100,14 +100,18 @@ has redis => (
 );
 
 =attr namespace
+
 This is useful to run multiple queue systems with the same Redis backend.
 
 By default 'resque' is used.
+
 =cut
 has namespace => ( is => 'rw', default => sub { 'resque' } );
 
 =attr failures
+
 Failures handler. See L<Resque::Failures>.
+
 =cut
 has failures => (
     is   => 'rw',
@@ -117,8 +121,10 @@ has failures => (
 );
 
 =attr worker
+
 A L<Resque::Worker> on this resque instance.
 It can have plugin/roles applied. See L<Resque::Pluggable>.
+
 =cut
 has worker => (
     is      => 'ro',
@@ -152,9 +158,11 @@ sub push {
 }
 
 =method pop
+
 Pops a job off a queue. Queue name should be a string.
 
 Returns a Resque::Job object.
+
 =cut
 sub pop {
     my ( $self, $queue ) = @_;
@@ -168,8 +176,10 @@ sub pop {
 }
 
 =method size
+
 Returns the size of a queue.
 Queue name should be a string.
+
 =cut
 sub size {
     my ( $self, $queue ) = @_;
@@ -203,7 +213,9 @@ sub peek {
 }
 
 =method queues
+
 Returns an array of all known Resque queues.
+
 =cut
 sub queues {
     my $self = shift;
@@ -212,7 +224,9 @@ sub queues {
 }
 
 =method remove_queue
+
 Given a queue name, completely deletes the queue.
+
 =cut
 sub remove_queue {
     my ( $self, $queue ) = @_;
@@ -279,11 +293,13 @@ sub mass_dequeue {
 }
 
 =method new_job
+
 Build a L<Resque::Job> object on this system for the given
 hashref or string(payload for object).
 
 L<Resque::Job> class can be extended thru roles/plugins. 
 See L<Resque::Pluggable>.
+
 =cut
 sub new_job {
     my ( $self, $job ) = @_;
@@ -300,8 +316,10 @@ sub new_job {
 =head1 HELPER METHODS
 
 =method key
+
 Concatenate $self->namespace with the received array of names
 to build a redis key name for this resque instance.
+
 =cut
 sub key {
     my $self = shift;
@@ -309,8 +327,10 @@ sub key {
 }
 
 =method keys
+
 Returns an array of all known Resque keys in Redis. Redis' KEYS operation
 is O(N) for the keyspace, so be careful - this can be slow for big databases.
+
 =cut
 sub keys {
     my $self = shift;
