@@ -4,7 +4,9 @@ use lib 't/lib';
 use Test::SpawnRedisServer;
 
 my ($c, $server) = redis();
-END { $c->() if $c }
+my $pid = $$;
+
+END { $c->() if $c && $$ == $pid }
 
 ok ( my $r = Resque->new( redis => $server, namespace => 'test_resque' ), "Building object for test server $server" );
 ok ( $r->redis->ping, 'Redis object is alive' );
@@ -15,7 +17,7 @@ $r->flush_namespace;
     ok( $w->add_queue( 'test' ), 'Add queue' );
     push_job($r);
 
-    $w->cant_fork(1);
+    # $w->cant_fork(1);
     is( $r->failures->count, 0, 'There is no failures in all system' );
 
     is( $w->failed, 0, 'No failure reported on this worker' );
@@ -38,6 +40,24 @@ $r->flush_namespace;
     ok( $fails[0]->{backtrace}, 'parse error and set backtrace' ) or diag explain $fails[0];
     ok( ref $fails[0]->{backtrace} eq 'ARRAY', 'backtrace is ArrayRef. for resque-web' );
     ok( $fails[0]->{error} !~ /\n/, '$fail->{error} have no "\n"') or diag $fails[0]->{error};
+    
+    #
+    # ensure a killed child process makes a job fail
+    #
+    $w->cant_fork(0); # be sure we do fork
+    is( $r->size('test'), 0, 'queue empty' );
+    $r->push( test => { class => 'Test::LongRunningWorker', args => [42] } );
+    is( $r->size('test'), 1, '1 job in queue' );
+    
+    note 'might hang here...';
+    local $SIG{ALRM} = sub { kill 9, $w->child };
+    alarm 1;
+    ok( !$w->work_tick(my $j = $w->reserve), 'Work one time' );
+    alarm 0;
+    
+    @fails = $r->failures->all(0,-1);
+    is( $w->failed, 4, 'Four failures');
+    ok( $fails[-1]->{error} =~ m{Exited\swith\sstatus}xms, 'Exit status part of error message' );
 }
 
 sub push_job {
