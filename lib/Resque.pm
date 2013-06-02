@@ -1,5 +1,6 @@
 package Resque;
 use Moose;
+use Scalar::Util 'blessed';
 use Moose::Util::TypeConstraints;
 with 'Resque::Pluggable';
 
@@ -153,7 +154,7 @@ sub push {
     my ( $self, $queue, $job ) = @_;
     confess "Can't push an empty job." unless $job;
     $self->_watch_queue($queue);
-    $job = $self->new_job($job) unless ref $job eq 'Resque::Job';
+    $job = $self->new_job($job) unless blessed $job && $job->isa('Resque::Job');
     $self->redis->rpush( $self->key( queue => $queue ), $job->encode );
 }
 
