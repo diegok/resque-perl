@@ -1,6 +1,7 @@
 {{$NEXT}}
 
     - Docs cleanup
+    - Allow custom job classes (Michal Sedlák)
 
 0.14      2013-04-26 15:04:00 Europe/Madrid
 
