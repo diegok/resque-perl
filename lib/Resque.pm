@@ -19,14 +19,14 @@ start sending jobs to be done by workers:
 
     my $r = Resque->new( redis => '127.0.0.1:6379' );
 
-    $r->push( my_queue => { 
-        class => 'My::Task', 
+    $r->push( my_queue => {
+        class => 'My::Task',
         args => [ 'Hello world!' ]
     });
 
 Background jobs can be any perl module that implement a perform() function. The Resque::Job object is
 passed as the only argument to this function:
-  
+
     package My::Task;
     use strict;
     use 5.10.0;
@@ -49,22 +49,22 @@ queues:
 
 =head1 DESCRIPTION
 
-Resque is a Redis-backed library for creating background jobs, placing them on multiple queues, 
+Resque is a Redis-backed library for creating background jobs, placing them on multiple queues,
 and processing them later.
 
 This library is a perl port of the original Ruby one: L<https://github.com/defunkt/resque>
-My main goal doing this port is to use the same backend to be able to manage the system using 
+My main goal doing this port is to use the same backend to be able to manage the system using
 ruby's resque-server webapp.
 
 As extracted from the original docs, the main features of Resque are:
 
-Resque workers can be distributed between multiple machines, support priorities, are resilient to 
+Resque workers can be distributed between multiple machines, support priorities, are resilient to
 memory leaks, tell you what they're doing, and expect failure.
 
-Resque queues are persistent; support constant time, atomic push and pop (thanks to Redis); provide 
+Resque queues are persistent; support constant time, atomic push and pop (thanks to Redis); provide
 visibility into their contents; and store jobs as simple JSON hashes.
 
-The Resque frontend tells you what workers are doing, what workers are not doing, what queues you're 
+The Resque frontend tells you what workers are doing, what workers are not doing, what queues you're
 using, what's in those queues, provides general usage stats, and helps you track failures.
 
 A lot more about Resque can be read on the original blog post: L<http://github.com/blog/542-introducing-resque>
@@ -80,15 +80,15 @@ Accept a Redis object or string. When a string is
 passed in, it will be used as Redis server argument.
 
 =cut
-subtype 'Sugar::Redis' 
+subtype 'Sugar::Redis'
     => as class_type('Redis');
-coerce 'Sugar::Redis' 
-    => from 'Str' 
-    => via { Redis->new( 
-        server    => $_, 
-        reconnect => 60, 
-        every     => 250, 
-        encoding  => undef 
+coerce 'Sugar::Redis'
+    => from 'Str'
+    => via { Redis->new(
+        server    => $_,
+        reconnect => 60,
+        every     => 250,
+        encoding  => undef
     )};
 
 has redis => (
@@ -153,7 +153,7 @@ sub push {
     my ( $self, $queue, $job ) = @_;
     confess "Can't push an empty job." unless $job;
     $self->_watch_queue($queue);
-    $job = $self->new_job($job) unless ref $job eq 'Resque::Job'; 
+    $job = $self->new_job($job) unless ref $job eq 'Resque::Job';
     $self->redis->rpush( $self->key( queue => $queue ), $job->encode );
 }
 
@@ -169,7 +169,7 @@ sub pop {
     my $payload = $self->redis->lpop($self->key( queue => $queue ));
     return unless $payload;
 
-    $self->new_job({ 
+    $self->new_job({
         payload => $payload,
         queue   => $queue
     });
@@ -188,7 +188,7 @@ sub size {
 
 =method peek
 
-Returns an array of jobs currently queued. 
+Returns an array of jobs currently queued.
 
 First argument is queue name and an optional secound and third are
 start and count values that can be used for pagination.
@@ -197,16 +197,16 @@ start is the item to begin, count is how many items to return.
 Passing a negative count argument will set a stop value instead
 of count. So, passing -1 will return full list, -2 all but last
 element and so on.
- 
+
 To get the 3rd page of a 30 item, paginatied list one would use:
     $resque->peek('my_queue', 59, 30)
 
 =cut
 sub peek {
     my ( $self, $queue, $start, $count ) = @_;
-    my $jobs = $self->list_range( 
-        $self->key( queue => $queue ), 
-        $start || 0, $count || 1 
+    my $jobs = $self->list_range(
+        $self->key( queue => $queue ),
+        $start || 0, $count || 1
     );
     $_ = $self->new_job({ queue => $queue, payload => $_ }) for @$jobs;
     return wantarray ? @$jobs : $jobs;
@@ -236,7 +236,7 @@ sub remove_queue {
 
 =method mass_dequeue
 
-Removes all matching jobs from a queue. Expects a hashref 
+Removes all matching jobs from a queue. Expects a hashref
 with queue name, a class name, and, optionally, args.
 
 Returns the number of jobs destroyed.
@@ -248,31 +248,31 @@ That is, for these two jobs:
 
   { 'class' => 'UpdateGraph', 'args' => ['perl'] }
   { 'class' => 'UpdateGraph', 'args' => ['ruby'] }
-  
+
 The following call will remove both:
-    
-    $rescue->mass_dequeue({ 
-        queue => 'test', 
-        class => 'UpdateGraph' 
+
+    $rescue->mass_dequeue({
+        queue => 'test',
+        class => 'UpdateGraph'
     });
-    
+
 Whereas specifying args will only remove the 2nd job:
-    
-    $rescue->mass_dequeue({ 
-        queue => 'test', 
-        class => 'UpdateGraph', 
-        args  => ['ruby'] 
+
+    $rescue->mass_dequeue({
+        queue => 'test',
+        class => 'UpdateGraph',
+        args  => ['ruby']
     });
-    
-Using this method without args can be potentially very slow and 
-memory intensive, depending on the size of your queue, as it loads 
+
+Using this method without args can be potentially very slow and
+memory intensive, depending on the size of your queue, as it loads
 all jobs into an array before processing.
 
 =cut
 sub mass_dequeue {
     my ( $self, $target ) = @_;
-    confess("Can't mass_dequeue() without queue and class names.") 
-        unless $target 
+    confess("Can't mass_dequeue() without queue and class names.")
+        unless $target
         and $target->{queue}
         and $target->{class};
 
@@ -297,15 +297,15 @@ sub mass_dequeue {
 Build a L<Resque::Job> object on this system for the given
 hashref or string(payload for object).
 
-L<Resque::Job> class can be extended thru roles/plugins. 
+L<Resque::Job> class can be extended thru roles/plugins.
 See L<Resque::Pluggable>.
 
 =cut
 sub new_job {
     my ( $self, $job ) = @_;
 
-    if ( $job && ref $job && ref $job eq 'HASH' ) { 
-         return $self->job_class->new({ resque => $self, %$job }); 
+    if ( $job && ref $job && ref $job eq 'HASH' ) {
+         return $self->job_class->new({ resque => $self, %$job });
     }
     elsif ( $job ) {
         return $self->job_class->new({ resque => $self, payload => $job });
@@ -347,7 +347,7 @@ the redis() backend.
 sub flush_namespace {
     my $self = shift;
     if ( my @keys = $self->keys ) {
-        return $self->redis->del( @keys ); 
+        return $self->redis->del( @keys );
     }
     return 0;
 }
@@ -393,8 +393,8 @@ what you've fixed.
 =head1 SEE ALSO
 
 =for :list
-* L<Gearman> 
-* L<TheSchwartz> 
+* L<Gearman>
+* L<TheSchwartz>
 * L<Queue::Q4M>
 
 =cut
