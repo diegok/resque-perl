@@ -188,8 +188,17 @@ sub work_tick {
         #while ( ! waitpid( $pid, WNOHANG ) ) { } # non-blocking has sense?
         waitpid( $pid, 0 );
         $self->log( "Forked job($pid) exited with status $?" );
+        
+        if ($?) {
+            $job->fail("Exited with status $?");
+            $self->failed(1);
+        }
     }
     else {
+        undef $SIG{TERM};
+        undef $SIG{INT};
+        undef $SIG{QUIT};
+        
         $self->procline( sprintf( "Processing %s since %s", $job->queue, $timestamp ) );
         $self->perform($job);
         exit(0) unless $self->cant_fork;
@@ -230,6 +239,7 @@ is processing will not be completed.
 sub kill_child {
     my $self = shift;
     return unless $self->child;
+    
     if ( kill 0, $self->child ) {
         $self->log( "Killing my child: " . $self->child );
         kill 9, $self->child;
