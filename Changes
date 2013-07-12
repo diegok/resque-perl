@@ -1,5 +1,9 @@
 {{$NEXT}}
 
+    - Watch forked jobs exit status (Wolfgang Kinkeldei)
+
+0.15      2013-04-26 16:38:40 Europe/Madrid
+
     - Docs cleanup
     - Allow custom job classes (Michal Sedlák)
 
