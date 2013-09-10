@@ -123,7 +123,7 @@ sub queue_from_class {
 =method perform
 
 Load job class and call perform() on it.
-This job objet will be passed as the only argument.
+This job object will be passed as the only argument.
 
 =cut
 sub perform {
