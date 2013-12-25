@@ -2,6 +2,7 @@ package Resque;
 use Moose;
 use Scalar::Util 'blessed';
 use Moose::Util::TypeConstraints;
+use Data::Compare;
 with 'Resque::Pluggable';
 
 # ABSTRACT: Redis-backed library for creating background jobs, placing them on multiple queues, and processing them later.
@@ -279,14 +280,14 @@ sub mass_dequeue {
 
     my $queue = $self->key( queue => $target->{queue} );
     my $removed = 0;
-    if ( exists $target->{args} ) {
-        $removed += $self->redis->lrem( $queue, 0, $self->new_job($target)->encode );
-    }
-    else {
-        for my $item ( $self->redis->lrange( $queue, 0, -1 ) ) {
-            if ( $self->new_job( $item )->class eq $target->{class} ) {
-                $removed += $self->redis->lrem( $queue, 0, $item );
+    for my $item ( $self->redis->lrange( $queue, 0, -1 ) ) {
+        my $job_item = $self->new_job( $item );
+        if ( $job_item->class eq $target->{class} ) {
+            if ( exists $target->{args} ) {
+                next unless Compare( $job_item->args, $target->{args} );
             }
+
+            $removed += $self->redis->lrem( $queue, 0, $item );
         }
     }
 

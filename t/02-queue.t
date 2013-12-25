@@ -66,9 +66,11 @@ is( $r->mass_dequeue({
     class => 'OtherTask'
 }), 0, 'dequeue no jobs on non existant queue' );  
 
+
 # dequeue
 push_jobs($r);
 is( $r->size('test'), 2, 'Test queue has two jobs again'); 
+isa_ok( $r->peek('test', 0, 1)->[0], 'Resque::Job' );
 is( $r->peek('test', 0, 1)->[0]->dequeue, 1, 'dequeue single job' );  
 is( $r->size('test'), 1, 'Test queue has one job'); 
 
