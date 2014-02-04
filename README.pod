@@ -62,3 +62,21 @@ using, what's in those queues, provides general usage stats, and helps you track
 
 A lot more about Resque can be read on the original blog post: L<http://github.com/blog/542-introducing-resque>
 
+=head1 WEB FRONTEND
+
+The original ruby project offers a web frontend for displaying queue- and
+worker status.
+
+A simple way to get the web frontend running is to install L<RVM|http://rvm.io>
+and let it manage your ruby installation inside your $HOME directory.
+
+    # download and install rvm:
+    curl -L https://get.rvm.io | bash -s stable
+    
+    # on OS-X you might need to run:
+    rvm autolibs enable
+    
+    # build a ruby, get and run resque (assume Redis server is running)
+    rvm install 2.0.0
+    gem install resque
+    resque-web
