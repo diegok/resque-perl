@@ -1,6 +1,9 @@
 {{$NEXT}}
 
     - Coerce object exceptions into string (issue #14)
+
+0.17      2013-25-12 19:10:21 Europe/Madrid
+
     - Stop comparing encoded json as it's broken with hash randomization (issue #13)
 
 0.16      2013-07-12 19:10:21 Europe/Madrid
