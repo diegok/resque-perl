@@ -42,8 +42,12 @@ $r->flush_namespace;
     ok( $fails[0]->{error} !~ /\n/, '$fail->{error} have no "\n"') or diag $fails[0]->{error};
     
     #
+    $r->push( test => { class => 'Test::FailClassWorker', args => [42] } );
+    is( $r->size('test'), 1, '1 job in queue' );
+    ok( !$w->work_tick($w->reserve), 'Work one time' );
+    is( $w->failed, 4, 'Failure reported on this worker' );
+
     # ensure a killed child process makes a job fail
-    #
     $w->cant_fork(0); # be sure we do fork
     is( $r->size('test'), 0, 'queue empty' );
     $r->push( test => { class => 'Test::LongRunningWorker', args => [42] } );
@@ -56,7 +60,7 @@ $r->flush_namespace;
     alarm 0;
     
     @fails = $r->failures->all(0,-1);
-    is( $w->failed, 4, 'Four failures');
+    is( $w->failed, 5, 'Five failures');
     ok( $fails[-1]->{error} =~ m{Exited\swith\sstatus}xms, 'Exit status part of error message' );
 }
 

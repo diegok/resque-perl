@@ -6,6 +6,7 @@ with 'Resque::Encoder';
 
 use overload '""' => \&stringify;
 use DateTime;
+use Moose::Util::TypeConstraints;
 
 requires 'save';
 
@@ -46,7 +47,11 @@ has exception => (
     default => sub { 'Resque::Failure' }
 );
 
-has error     => ( is => 'rw', isa => 'Str', required => 1 );
+coerce 'Str'
+    => from 'Object'
+    => via {"$_"};
+
+has error     => ( is => 'rw', isa => 'Str', required => 1, coerce => 1 );
 # ruby 'resque-web' expect backtrace is array.
 has backtrace => ( is => 'rw', isa => 'ArrayRef[Str]' );
 
