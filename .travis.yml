@@ -5,6 +5,6 @@ perl:
   - "5.16"
   - "5.10"
 before_install:
-  - "cpanm --notest Dist::Zilla Pod::Elemental::Transformer::List"
+  - "cpanm --notest Dist::Zilla Pod::Elemental::Transformer::List Pod::Coverage::TrustPod"
 install: "dzil authordeps | cpanm --notest && dzil listdeps | cpanm --notest"
 script: "dzil test --release"
