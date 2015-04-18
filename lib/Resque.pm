@@ -377,7 +377,7 @@ __PACKAGE__->meta->make_immutable();
 
 =head1 BUGS
 
-This is an early release, so probable there are plenty of bugs around.
+As in any piece of software there might be bugs around.
 If you found one, please report it on RT or at the github repo:
 
 L<https://github.com/diegok/resque-perl>
@@ -390,7 +390,7 @@ what you've fixed.
 =for :list
 * Improve docs for plugin authors
 * A generic runner for attaching workers to queues.
-* Find a way to test worker fork and signal handling.
+* Test worker fork and signal handling.
 
 =head1 SEE ALSO
 
