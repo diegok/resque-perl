@@ -536,13 +536,20 @@ sub worker_pids {
     my $self = shift;
     my @pids;
 
-    my $ps_command = $^O eq 'solaris'
-                ? 'ps -A -o pid,args'
-                : 'ps -A -o pid,command';
+    if($^O=~m/^(cygwin|MSWin32)$/i) {
+        # $0 assignment does not work under Win32, so we'll return a list of perl PIDs instead
+        @pids = map { s/^PID:\s*// && $_ }
+                grep { /^PID/ }
+                split( /[\r\n]/ , `tasklist /FI "IMAGENAME eq perl.exe" /FO list` );
+    } else {
+        my $ps_command = $^O eq 'solaris'
+                    ? 'ps -A -o pid,args'
+                    : 'ps -A -o pid,command';
 
-    for ( split "\n", `$ps_command | grep resque | grep -v resque-web | grep -v grep` ) {
-        if ( m/^\s*(\d+)\s(.+)$/ ) {
-            push @pids, $1;
+        for ( split "\n", `$ps_command | grep resque | grep -v resque-web | grep -v grep` ) {
+            if ( m/^\s*(\d+)\s(.+)$/ ) {
+                push @pids, $1;
+            }
         }
     }
     return wantarray ? @pids : \@pids;
