@@ -2,6 +2,12 @@
 
 Redis-backed library for creating background jobs, placing them on multiple queues, and processing them later.
 
+=begin html
+
+  <img src="https://travis-ci.org/diegok/resque-perl.svg" data-bindattr-815="815" title="Build Status for resque-perl">
+
+=end html
+
 =head1 SYNOPSIS
 
 First you create a Resque instance where you configure the L<Redis> backend and then you can
@@ -11,14 +17,14 @@ start sending jobs to be done by workers:
 
     my $r = Resque->new( redis => '127.0.0.1:6379' );
 
-    $r->push( my_queue => { 
-        class => 'My::Task', 
+    $r->push( my_queue => {
+        class => 'My::Task',
         args => [ 'Hello world!' ]
     });
 
 Background jobs can be any perl module that implement a perform() function. The Resque::Job object is
 passed as the only argument to this function:
-  
+
     package My::Task;
     use strict;
     use 5.10.0;
