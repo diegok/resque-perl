@@ -2,11 +2,7 @@
 
 Redis-backed library for creating background jobs, placing them on multiple queues, and processing them later.
 
-=begin html
-
-  <img src="https://travis-ci.org/diegok/resque-perl.svg" data-bindattr-815="815" title="Build Status for resque-perl">
-
-=end html
+=for HTML <a href="https://travis-ci.org/diegok/resque-perl"><img src="https://travis-ci.org/diegok/resque-perl.svg?branch=master"></a>
 
 =head1 SYNOPSIS
 
