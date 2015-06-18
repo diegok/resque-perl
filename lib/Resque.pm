@@ -97,7 +97,7 @@ has redis => (
     is      => 'ro',
     lazy    => 1,
     coerce  => 1,
-    isa     => 'Sugar::Redis',
+    isa     => 'Sugar::Redis|Object',
     default => sub { Redis->new }
 );
 
