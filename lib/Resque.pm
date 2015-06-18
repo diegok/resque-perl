@@ -77,11 +77,15 @@ A lot more about Resque can be read on the original blog post: L<http://github.c
 
 =attr redis
 
-Redis instance for this Resque instance.
-Accept a Redis object or string. When a string is
-passed in, it will be used as Redis server argument.
+Redis instance for this Resque instance. Accepts a Redis object or string.
+
+When a string is passed in, it will be used as Redis server argument.
+
+If you pass an object, it can be an instance of any class that implements the interface defined by
+the L<Redis> class. So, for example, you can use L<Redis::Fast>.
 
 =cut
+
 subtype 'Sugar::Redis'
     => as class_type('Redis');
 coerce 'Sugar::Redis'
