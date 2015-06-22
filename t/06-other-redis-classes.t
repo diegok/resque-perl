@@ -3,22 +3,17 @@ use Test::Exception;
 use Resque;
 use lib 't/lib';
 use Redis;
+use Test::SpawnRedisServer;
 use Test::Redis;
 use Test::RedisMoose;
 use Test::RedisSubclass;
 
+my ($c, $server) = redis();
+END { $c->() if $c }
 
 {
 	my $resque;
-	ok($resque = Resque->new, "Can create a resque object without passing in a Redis object");
-    isa_ok($resque, 'Resque');
-    isa_ok($resque->redis, 'Redis');
-}
-
-{
-	my $redis = Redis->new; # (server => '127.0.0.1');
-	my $resque;
-	ok($resque = Resque->new(redis => $redis), "Can create a resque object with a Redis object");
+	ok($resque = Resque->new(redis => $server), "Can create a resque object with a Redis object");
     isa_ok($resque, 'Resque');
     isa_ok($resque->redis, 'Redis');
 }
