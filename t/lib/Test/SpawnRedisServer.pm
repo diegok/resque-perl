@@ -13,6 +13,13 @@ use base qw( Exporter );
 our @EXPORT = qw( redis );
 
 sub redis {
+
+  # Should we force resque to skip using Redis::Fast ?
+  if ( $ENV{REDIS_PP} ) {
+    print STDERR "Skipping Redis::Fast for testing!";
+    unshift @INC, sub{ $_[1] eq 'Redis/Fast.pm' && die q|Can't locate Redis/Fast.pm in @INC|};
+  }
+
   my ($fh, $fn) = File::Temp::tempfile();
   my $port = 11011 + ($$ % 127);
 

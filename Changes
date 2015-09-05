@@ -1,5 +1,10 @@
 {{$NEXT}}
 
+    - Default to Redis::Fast when available (issue #17)
+    - Accept any kind of object as a redis client (djstevenson)
+
+0.19      2014-04-28 22:41:44CET+0100 Europe/Madrid
+
     - Support for win32 when prunning dead workers (codehead)
     - dzil cleanup
 

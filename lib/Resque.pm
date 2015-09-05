@@ -2,15 +2,17 @@ package Resque;
 use Moose;
 use Scalar::Util 'blessed';
 use Moose::Util::TypeConstraints;
+use Class::Load;
 use Data::Compare;
 with 'Resque::Pluggable';
 
 # ABSTRACT: Redis-backed library for creating background jobs, placing them on multiple queues, and processing them later.
 
-use Redis;
 use Resque::Job;
 use Resque::Worker;
 use Resque::Failures;
+
+sub _redis_class{ Class::Load::load_first_existing_class( 'Redis::Fast', 'Redis' ) }
 
 =head1 SYNOPSIS
 
@@ -77,32 +79,28 @@ A lot more about Resque can be read on the original blog post: L<http://github.c
 
 =attr redis
 
-Redis instance for this Resque instance. Accepts a Redis object or string.
+Redis instance for this Resque instance. Accepts a string, L<Redis>, L<Redis::Fast> or any other object that behaves like those.
 
-When a string is passed in, it will be used as Redis server argument.
-
-If you pass an object, it can be an instance of any class that implements the interface defined by
-the L<Redis> class. So, for example, you can use L<Redis::Fast>.
+When a string is passed in, it will be used as the server argument of the auto selected driver wich.
 
 =cut
 
-subtype 'Sugar::Redis'
-    => as class_type('Redis');
-coerce 'Sugar::Redis'
-    => from 'Str'
-    => via { Redis->new(
+subtype 'Sugar::Redis' => as 'Object';
+coerce 'Sugar::Redis' => from 'Str' => via {
+    _redis_class->new(
         server    => $_,
         reconnect => 60,
         every     => 250,
         encoding  => undef
-    )};
+    )
+};
 
 has redis => (
     is      => 'ro',
     lazy    => 1,
     coerce  => 1,
-    isa     => 'Sugar::Redis|Object',
-    default => sub { Redis->new }
+    isa     => 'Sugar::Redis',
+    default => sub { _redis_class->new }
 );
 
 =attr namespace
