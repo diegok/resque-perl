@@ -1,8 +1,8 @@
 package Resque::Failures;
-use Moose;
-with 'Resque::Encoder';
 # ABSTRACT: Class for managing Resque failures
 
+use Moose;
+with 'Resque::Encoder';
 use Class::Load qw(load_class);
 use Carp;
 

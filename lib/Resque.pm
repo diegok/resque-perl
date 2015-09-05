@@ -1,12 +1,12 @@
 package Resque;
+# ABSTRACT: Redis-backed library for creating background jobs, placing them on multiple queues, and processing them later.
+
 use Moose;
 use Scalar::Util 'blessed';
 use Moose::Util::TypeConstraints;
 use Class::Load;
 use Data::Compare;
 with 'Resque::Pluggable';
-
-# ABSTRACT: Redis-backed library for creating background jobs, placing them on multiple queues, and processing them later.
 
 use Resque::Job;
 use Resque::Worker;

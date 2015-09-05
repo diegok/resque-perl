@@ -1,9 +1,9 @@
 package Resque::Failure::Redis;
+# ABSTRACT: Redis backend for worker failures
+
 use Moose;
 with 'Resque::Failure';
 with 'Resque::Encoder';
-
-# ABSTRACT: Redis backend for worker failures
 
 =method save
 

@@ -1,7 +1,7 @@
 package Resque::Stat;
-use Moose;
-
 # ABSTRACT: The stat subsystem. Used to keep track of integer counts.
+
+use Moose;
 
 =attr resque
 =cut
@@ -24,7 +24,7 @@ sub get {
 =method incr
 
 For a string stat name, increments the stat by one.
- 
+
 Can optionally accept a second int parameter. The stat is then
 incremented by that amount.
 
@@ -38,7 +38,7 @@ sub incr {
 =method decr
 
 For a string stat name, decrements the stat by one.
- 
+
 Can optionally accept a second int parameter. The stat is then
 decremented by that amount.
 

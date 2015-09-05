@@ -1,8 +1,8 @@
 package Resque::Failure;
+# ABSTRACT: Role to be consumed by any failure class.
+
 use Moose::Role;
 with 'Resque::Encoder';
-
-# ABSTRACT: Role to be consumed by any failure class.
 
 use overload '""' => \&stringify;
 use DateTime;
@@ -10,16 +10,16 @@ use Moose::Util::TypeConstraints;
 
 requires 'save';
 
-has 'worker' => ( 
+has 'worker' => (
     is       => 'ro',
-    isa      => 'Resque::Worker', 
+    isa      => 'Resque::Worker',
     required => 1
 );
 
-has 'job' => ( 
-    is      => 'ro', 
-    handles  => { 
-        resque  => 'resque', 
+has 'job' => (
+    is      => 'ro',
+    handles  => {
+        resque  => 'resque',
         requeue => 'enqueue',
         payload => 'payload',
         queue   => 'queue',
@@ -27,21 +27,21 @@ has 'job' => (
     required => 1
 );
 
-has created => ( 
+has created => (
     is      => 'rw',
-    default => sub { DateTime->now } 
+    default => sub { DateTime->now }
 );
 
-has failed_at => ( 
+has failed_at => (
     is      => 'ro',
     lazy    => 1,
-    default => sub { 
-        $_[0]->created->strftime("%Y/%m/%d %H:%M:%S %Z"); 
+    default => sub {
+        $_[0]->created->strftime("%Y/%m/%d %H:%M:%S %Z");
     },
     predicate => 'has_failed_at'
 );
 
-has exception => ( 
+has exception => (
     is      => 'rw',
     lazy    => 1,
     default => sub { 'Resque::Failure' }

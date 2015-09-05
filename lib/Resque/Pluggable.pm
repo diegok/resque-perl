@@ -1,7 +1,7 @@
 package Resque::Pluggable;
-use Moose::Role;
-
 # ABSTRACT: Role to load Resque plugin's and and apply roles.
+
+use Moose::Role;
 
 use namespace::autoclean;
 use Class::Load qw(load_class);

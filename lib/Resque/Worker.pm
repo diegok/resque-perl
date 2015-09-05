@@ -1,4 +1,6 @@
 package Resque::Worker;
+# ABSTRACT: Does the hard work of babysitting Resque::Job's
+
 use Moose;
 with 'Resque::Encoder';
 
@@ -11,8 +13,6 @@ use List::MoreUtils qw(uniq any);
 use Time::HiRes qw(sleep);
 use DateTime;
 use Try::Tiny;
-
-# ABSTRACT: Does the hard work of babysitting Resque::Job's
 
 use overload
     '""' => \&_string,

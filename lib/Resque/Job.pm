@@ -1,9 +1,9 @@
 package Resque::Job;
+# ABSTRACT: Resque job container
+
 use Moose;
 use Moose::Util::TypeConstraints;
 with 'Resque::Encoder';
-
-# ABSTRACT: Resque job container
 
 use overload '""' => \&stringify;
 use Class::Load qw(load_class);
