@@ -1,5 +1,9 @@
 {{$NEXT}}
 
+    - Docs fix
+
+0.20      2015-09-07 11:26:35+02:00 Europe/Madrid
+
     - Default to Redis::Fast when available (issue #17)
     - Accept any kind of object as a redis client (djstevenson)
 

@@ -81,7 +81,8 @@ A lot more about Resque can be read on the original blog post: L<http://github.c
 
 Redis instance for this Resque instance. Accepts a string, L<Redis>, L<Redis::Fast> or any other object that behaves like those.
 
-When a string is passed in, it will be used as the server argument of the auto selected driver wich.
+When a string is passed in, it will be used as the server argument of a new client object. When L<Redis::Fast> is available this
+will be used, when not the pure perl L<Redis> client will be used instead.
 
 =cut
 
