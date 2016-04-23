@@ -1,6 +1,6 @@
 #!/usr/bin/env perl
 # PODNAME: resque-worker
-# # ABSTRACT: Executable to run your resque workers
+# ABSTRACT: Executable to run your resque workers
 
 use strict;
 use Resque;
@@ -16,7 +16,7 @@ $w->work;
 
 sub getopt {
     my ($opt, $usage) = describe_options(
-        "$0 \%o",
+        "resque-worker \%o",
         [ 'redis|r=s@',   "Redis server (default: 127.0.0.1:6379)", { default => '127.0.0.1:6379' } ],
         [ 'queue|q=s@',   "Queue name/s (required)", { required => 1 } ],
         [],
