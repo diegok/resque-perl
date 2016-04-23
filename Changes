@@ -1,5 +1,8 @@
 {{$NEXT}}
 
+    - Script to run workers
+    - Failures::mass_remove method for fast and selective delete and requeue on failed jobs
+
 0.21      2015-09-07 11:35:21+02:00 Europe/Madrid
 
     - Docs fix

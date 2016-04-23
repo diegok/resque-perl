@@ -40,8 +40,7 @@ $r->flush_namespace;
     ok( $fails[0]->{backtrace}, 'parse error and set backtrace' ) or diag explain $fails[0];
     ok( ref $fails[0]->{backtrace} eq 'ARRAY', 'backtrace is ArrayRef. for resque-web' );
     ok( $fails[0]->{error} !~ /\n/, '$fail->{error} have no "\n"') or diag $fails[0]->{error};
-    
-    #
+
     $r->push( test => { class => 'Test::FailClassWorker', args => [42] } );
     is( $r->size('test'), 1, '1 job in queue' );
     ok( !$w->work_tick($w->reserve), 'Work one time' );
@@ -50,18 +49,30 @@ $r->flush_namespace;
     # ensure a killed child process makes a job fail
     $w->cant_fork(0); # be sure we do fork
     is( $r->size('test'), 0, 'queue empty' );
-    $r->push( test => { class => 'Test::LongRunningWorker', args => [42] } );
+    $r->push( test => { class => 'Test::LongRunningWorker', args => [23] } );
     is( $r->size('test'), 1, '1 job in queue' );
-    
+
     note 'might hang here...';
     local $SIG{ALRM} = sub { kill 9, $w->child };
     alarm 1;
     ok( !$w->work_tick(my $j = $w->reserve), 'Work one time' );
     alarm 0;
-    
+
     @fails = $r->failures->all(0,-1);
     is( $w->failed, 5, 'Five failures');
-    ok( $fails[-1]->{error} =~ m{Exited\swith\sstatus}xms, 'Exit status part of error message' );
+    ok( $fails[-1]->{error} =~ /Exited\swith\sstatus/xms, 'Exit status part of error message' );
+
+    is( $r->failures->count, 4, 'There is 4 failures' );
+
+    is( $r->failures->mass_remove( args => 42 ), 1, 'Mass remove failed jobs by arguments' );
+    is( $r->failures->count, 3, 'Failed job was removed' );
+
+    is( $r->failures->mass_remove( requeue => 1, error => 'Exit' ), 1, 'Remove and requeue by error' );
+    is( $r->size('test'), 1, 'Failed job was requeued' );
+    is( $r->failures->count, 2, 'Failed job was removed' );
+
+    is( $r->failures->mass_remove, 2, 'Remove without filters' );
+    is( $r->failures->count, 0, 'All failed jobs was removed' );
 }
 
 sub push_job {

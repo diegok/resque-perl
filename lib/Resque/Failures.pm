@@ -76,7 +76,7 @@ jobs.
 sub all {
     my ( $self, $start, $count ) = @_;
     my $all = $self->resque->list_range(
-        $self->key('failed'), $start, $count
+        $self->key('failed'), $start||0, $count||-1
     );
     $_ = $self->encoder->decode( $_ ) for @$all;
     return wantarray ? @$all : $all;
@@ -107,10 +107,14 @@ sub requeue {
         $self->key('failed'), $index,
         $self->encoder->encode($item)
     );
-    $self->resque->push(
-        $item->{queue} => {
-            class => $item->{payload}{class},
-            args  => $item->{payload}{args},
+    $self->_requeue($item);
+}
+
+sub _requeue {
+    my ( $self, $item, $queue ) = @_;
+    $self->resque->push( $queue || $item->{queue} => {
+        class => $item->{payload}{class},
+        args  => $item->{payload}{args},
     });
 }
 
@@ -130,6 +134,65 @@ sub remove {
     my $key = $self->key('failed');
     $self->redis->lset( $key, $index, $id);
     $self->redis->lrem( $key, 1, $id );
+}
+
+=method mass_remove
+
+Remove and optionally requeue all or matching failed jobs. Errors that happen
+after this method is fired will remind untouched.
+
+Filters, if present, are useful to select failed jobs and should be regexes or
+strings that will be matched against any of the following failed job field:
+
+    queue: the queue where job had failed
+    class: the job class
+    error: the error string
+    args:  a JSON representation of the job arguments
+
+By default, all matching jobs will be deleted but the ones that
+doesn't match will be placed back at the end of the failed jobs.
+
+The behavior can be modified with the following options:
+
+    requeue: requeue matching jobs after being removed
+    queue:   force requeued jobs to be placed on this queue
+
+Example
+
+    # Remove and requeue all failed jobs from queue 'test_queue' of class My::Job::Class
+    $resque->failures->mass_remove(
+        queue   => 'test_queue',
+        class   => qr/^My::Job::Class$/,
+        requeue => 1
+    );
+
+=cut
+sub mass_remove {
+    my ( $self, %opt ) = @_;
+    $opt{limit} ||= $self->count || return 0;
+
+    for (qw/queue error class args/) { $opt{$_} = qr/$opt{$_}/ if $opt{$_} && not ref $opt{$_} }
+
+    my $key = $self->key('failed');
+    my $enc = $self->encoder;
+
+    my ( $count, $rem ) = ( 0, 0 );
+    while ( my $encoded_item = $self->redis->lpop($key) ) {
+        my $item = $enc->decode($encoded_item);
+
+        my $match = (!$opt{queue} && !$opt{error} && !$opt{class} && !$opt{args})
+                 || ($opt{queue} && $item->{queue} =~ $opt{queue})
+                 || ($opt{error} && $item->{error} =~ $opt{error})
+                 || ($opt{class} && $item->{payload}{class} =~ $opt{class})
+                 || ($opt{args}  && $enc->encode($item->{payload}{args}) =~ $opt{args});
+
+        if ( $match ) { $rem++; $self->_requeue($item, $opt{queue}) if $opt{requeue} }
+        else          { $self->redis->rpush( $key => $encoded_item ) }
+
+        last if ++$count >= $opt{limit};
+    }
+
+    $rem;
 }
 
 __PACKAGE__->meta->make_immutable();
