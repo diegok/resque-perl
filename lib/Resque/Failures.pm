@@ -155,8 +155,8 @@ doesn't match will be placed back at the end of the failed jobs.
 
 The behavior can be modified with the following options:
 
-    requeue: requeue matching jobs after being removed
-    queue:   force requeued jobs to be placed on this queue
+    requeue: requeue matching jobs after being removed.
+    requeue_to: Requeued jobs will be placed on this queue instead of the original one. This option implies requeue.
 
 Example
 
@@ -182,12 +182,14 @@ sub mass_remove {
         my $item = $enc->decode($encoded_item);
 
         my $match = (!$opt{queue} && !$opt{error} && !$opt{class} && !$opt{args})
-                 || ($opt{queue} && $item->{queue} =~ $opt{queue})
-                 || ($opt{error} && $item->{error} =~ $opt{error})
-                 || ($opt{class} && $item->{payload}{class} =~ $opt{class})
-                 || ($opt{args}  && $enc->encode($item->{payload}{args}) =~ $opt{args});
+                 || (
+                     (!$opt{queue} || $item->{queue} =~ $opt{queue})
+                     && (!$opt{error} || $item->{error} =~ $opt{error})
+                     && (!$opt{class} || $item->{payload}{class} =~ $opt{class})
+                     && (!$opt{args}  || $enc->encode($item->{payload}{args}) =~ $opt{args})
+                 );
 
-        if ( $match ) { $rem++; $self->_requeue($item, $opt{queue}) if $opt{requeue} }
+        if ( $match ) { $rem++; $self->_requeue($item, $opt{requeue_to}) if $opt{requeue} || $opt{requeue_to} }
         else          { $self->redis->rpush( $key => $encoded_item ) }
 
         last if ++$count >= $opt{limit};

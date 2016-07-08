@@ -67,11 +67,16 @@ $r->flush_namespace;
     is( $r->failures->mass_remove( args => 42 ), 1, 'Mass remove failed jobs by arguments' );
     is( $r->failures->count, 3, 'Failed job was removed' );
 
-    is( $r->failures->mass_remove( requeue => 1, error => 'Exit' ), 1, 'Remove and requeue by error' );
+    is( $r->failures->mass_remove( requeue => 1, error => 'Exit', queue => 'missing' ), 0, 'All conditions are checked' );
+    is( $r->failures->mass_remove( requeue => 1, error => 'Exit', queue => 'test' ), 1, 'Remove and requeue by error' );
     is( $r->size('test'), 1, 'Failed job was requeued' );
     is( $r->failures->count, 2, 'Failed job was removed' );
 
-    is( $r->failures->mass_remove, 2, 'Remove without filters' );
+    is( $r->failures->mass_remove( requeue_to => 'other', limit => 1 ), 1, 'Remove and requeue to a different queue with limit' );
+    is( $r->size('other'), 1, 'Job was requeued on the other queue' );
+    is( $r->failures->count, 1, 'Failed job was removed' );
+
+    is( $r->failures->mass_remove, 1, 'Remove without filters' );
     is( $r->failures->count, 0, 'All failed jobs was removed' );
 }
 
