@@ -1,5 +1,7 @@
 {{$NEXT}}
 
+    - Removed circular refs from worker and failures (#GH20)
+
 0.22      2016-04-23 09:42:25+02:00 Europe/Madrid
 
     - Script to run workers
