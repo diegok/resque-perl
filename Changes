@@ -1,5 +1,7 @@
 {{$NEXT}}
 
+0.23      2016-07-09 01:23:03+02:00 Europe/Madrid
+
     - Fixed and reworked mass_remove (#GH19)
     - Removed circular refs from worker and failures (#GH20)
 
