@@ -113,10 +113,7 @@ sub requeue {
 
 sub _requeue {
     my ( $self, $item, $queue ) = @_;
-    $self->resque->push( $queue || $item->{queue} => {
-        class => $item->{payload}{class},
-        args  => $item->{payload}{args},
-    });
+    $self->resque->push( $queue || $item->{queue} => $item->{payload} );
 }
 
 =method remove
