@@ -26,7 +26,6 @@ The L<Resque> object running this worker.
 =cut
 has 'resque' => (
     is       => 'ro',
-    weak_ref => 1,
     required => 1,
     handles  => [qw/ redis key /]
 );

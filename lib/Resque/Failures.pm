@@ -14,7 +14,6 @@ Accessor to the Resque object.
 has resque => (
     is       => 'ro',
     required => 1,
-    weak_ref => 1,
     handles  => [qw/ redis key /]
 );
 

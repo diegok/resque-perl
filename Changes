@@ -1,5 +1,7 @@
 {{$NEXT}}
 
+    - Reverted #GH20 as it breaks workers losing reference to resque (will need a bigger rework)
+
 0.23      2016-07-09 01:23:03+02:00 Europe/Madrid
 
     - Fixed and reworked mass_remove (#GH19)
