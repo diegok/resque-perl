@@ -1,5 +1,9 @@
 {{$NEXT}}
 
+    - Worker::started() method now parse date string and returns a DateTime object
+
+0.25      2016-08-16 13:38:13+02:00 Europe/Madrid
+
     - Now Resque::worker() builds a fresh worker every time it's called (#GH20)
 
 0.24      2016-07-13 22:03:49+02:00 Europe/Madrid

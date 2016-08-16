@@ -326,14 +326,12 @@ sub done_working {
 What time did this worker start?
 Returns an instance of DateTime.
 
-TODO: not working in this release. This is returning
-a string used internally.
-
 =cut
 sub started {
     my $self = shift;
-    $self->redis->get( $self->key( worker => $self->id => 'started' ) );
-    #TODO -> parse datetime and return DT object.
+    my $str = $self->redis->get( $self->key( worker => $self->id => 'started' ) );
+    my ( $year, $month, $day, $hour, $minute, $secs, $tz ) = $str =~ /^(\d+)-(\d+)-(\d+) (\d+):(\d+):(\d+) (.+)$/;
+    DateTime->new( day => $day, month => $month, year => $year, hour => $hour, minute => $minute, second => $secs, time_zone => $tz );
 }
 
 =method set_started

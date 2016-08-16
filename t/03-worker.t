@@ -43,6 +43,7 @@ $r->flush_namespace;
     ok( $job->has_worker, 'Worker set on job after working_on' );
     is( $worker->processing->{queue}, 'test2', 'processing() know what worker is doing');
     ok( $worker->is_working, 'Worker is working' );
+    isa_ok( $worker->started, 'DateTime', 'Worker knows when it started working' );
     ok( ! $worker->is_idle, 'Worker is not idle' );
     is( $worker->perform($job), 'bazinga!', 'Worker can make a job to perform()');
     $worker->done_working;
