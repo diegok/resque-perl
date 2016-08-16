@@ -125,9 +125,9 @@ has failures => (
     handles => [qw/ throw /]
 );
 
-=head1 worker
+=method worker
 
-Creates a L<Resque::Worker> on this resque instance.
+Returns a new L<Resque::Worker> on this resque instance.
 It can have plugin/roles applied. See L<Resque::Pluggable>.
 
 =cut
