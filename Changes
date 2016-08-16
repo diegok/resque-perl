@@ -1,5 +1,9 @@
 {{$NEXT}}
 
+    - Now Resque::worker() builds a fresh worker every time it's called (#GH20)
+
+0.24      2016-07-13 22:03:49+02:00 Europe/Madrid
+
     - Reverted #GH20 as it breaks workers losing reference to resque (will need a bigger rework)
 
 0.23      2016-07-09 01:23:03+02:00 Europe/Madrid

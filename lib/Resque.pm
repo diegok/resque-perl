@@ -125,17 +125,16 @@ has failures => (
     handles => [qw/ throw /]
 );
 
-=attr worker
+=head1 worker
 
-A L<Resque::Worker> on this resque instance.
+Creates a L<Resque::Worker> on this resque instance.
 It can have plugin/roles applied. See L<Resque::Pluggable>.
 
 =cut
-has worker => (
-    is      => 'ro',
-    lazy    => 1,
-    default => sub { $_[0]->worker_class->new( resque => $_[0] ) }
-);
+sub worker {
+    my $self = shift;
+    $self->worker_class->new( resque => $self );
+}
 
 =head1 Queue manipulation
 

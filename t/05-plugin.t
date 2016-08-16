@@ -16,13 +16,16 @@ END { $c->() if $c }
     isa_ok( $r->plugins->[0], 'Resque::Plugin::Duck' );
     ok( $r->talk, 'Resque can talk like a duck now!' );
 
-    ok( $r->worker->talk, 'Worker can also talk' );
-    ok( $r->worker->walk, '... and walk :)' );
+    ok( my $worker = $r->worker, 'Get a worker to play with...' );
 
-    ok( $r->push( test => { class => 'Test::Worker', args => [':)'] } ), 'Push new job to test queue' ); 
+    ok( $worker->talk, 'Worker can also talk' );
+    ok( $worker->walk, '... and walk :)' );
 
-    ok( $r->worker->add_queue('test'), 'Add test queue to the worker' );
-    ok( $job = $r->worker->reserve, 'reserve() a job' );
+    ok( $r->push( test => { class => 'Test::Worker', args => [':)'] } ), 'Push new job to test queue' );
+
+
+    ok( $worker->add_queue('test'), 'Add test queue to the worker' );
+    ok( $job = $worker->reserve, 'reserve() a job' );
     is( $job->args->[0], ':)', 'Got the expected job' );
 
     ok( $job->talk, 'Job can also talk' );
@@ -34,8 +37,8 @@ done_testing();
 sub new_with_plugins {
     my $plugins = join ', ', @_;
 
-    ok ( my $r = Resque->new( 
-            redis     => $server, 
+    ok ( my $r = Resque->new(
+            redis     => $server,
             namespace => 'test_resque',
             plugins   => [@_]
     ), "Building object for test server $server with plugins: $plugins" );
