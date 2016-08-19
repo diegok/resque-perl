@@ -188,7 +188,7 @@ sub work_tick {
         #while ( ! waitpid( $pid, WNOHANG ) ) { } # non-blocking has sense?
         waitpid( $pid, 0 );
         $self->log( "Forked job($pid) exited with status $?" );
-        
+
         if ($?) {
             $job->fail("Exited with status $?");
             $self->failed(1);
@@ -198,7 +198,7 @@ sub work_tick {
         undef $SIG{TERM};
         undef $SIG{INT};
         undef $SIG{QUIT};
-        
+
         $self->procline( sprintf( "Processing %s since %s", $job->queue, $timestamp ) );
         $self->perform($job);
         exit(0) unless $self->cant_fork;
@@ -239,7 +239,7 @@ is processing will not be completed.
 sub kill_child {
     my $self = shift;
     return unless $self->child;
-    
+
     if ( kill 0, $self->child ) {
         $self->log( "Killing my child: " . $self->child );
         kill 9, $self->child;
@@ -329,8 +329,12 @@ Returns an instance of DateTime.
 =cut
 sub started {
     my $self = shift;
-    my $str = $self->redis->get( $self->key( worker => $self->id => 'started' ) );
-    my ( $year, $month, $day, $hour, $minute, $secs, $tz ) = $str =~ /^(\d+)-(\d+)-(\d+) (\d+):(\d+):(\d+) (.+)$/;
+    _parsedate( $self->redis->get( $self->key( worker => $self->id => 'started' ) ) );
+}
+
+sub _parsedate {
+    my $str = pop;
+    my ( $year, $month, $day, $hour, $minute, $secs, $tz ) = $str =~ m|^(\d+)[-/](\d+)[-/](\d+) (\d+):(\d+):(\d+) (.+)$|;
     DateTime->new( day => $day, month => $month, year => $year, hour => $hour, minute => $minute, second => $secs, time_zone => $tz );
 }
 
@@ -352,6 +356,18 @@ Returns a hash explaining the Job we're currently processing, if any.
 sub processing {
     my $self = shift;
     eval { $self->encoder->decode( $self->redis->get( $self->key( worker => $self->id ) ) ) } || {};
+}
+
+=method processing_started
+
+What time did this worker started to work on current job?
+Returns an instance of DateTime or undef when it's not working.
+
+=cut
+sub processing_started {
+    my $self = shift;
+    my $run_at = $self->processing->{run_at} || return;
+    _parsedate($run_at);
 }
 
 =method state

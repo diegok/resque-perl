@@ -23,7 +23,7 @@ sub getopt {
         [ 'interval|i=f', "Polling interval in floating seconds for this resque worker (Default 5 seconds)", { default => 5 } ],
         [],
         [ 'module|M=s@',  "Modules to load before forking occurs" ],
-        [ 'cant_fork|f',  "Don't let resque fork" ],
+        [ 'unforked|f',   "Don't let resque fork" ],
         [],
         [ 'verbose|v',    "set resque worker to be verbose" ],
         [ 'help',         "print usage message and exit" ],
