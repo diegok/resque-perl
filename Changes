@@ -1,5 +1,9 @@
 {{$NEXT}}
 
+    - Fixed cant_fork option on resque-worker (#GH21)
+
+0.26      2016-08-19 20:27:43+02:00 Europe/Madrid
+
     - New Resque::WorkerClass class to ease the creation of Moose based background jobs
     - Resque::Worker::started() method now parse date string and returns a DateTime object
 
