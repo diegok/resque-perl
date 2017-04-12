@@ -1,6 +1,7 @@
 {{$NEXT}}
 
     - Fixed cant_fork option on resque-worker (#GH21)
+    - Fixed --redis server:port option on resque-worker
 
 0.26      2016-08-19 20:27:43+02:00 Europe/Madrid
 
