@@ -17,7 +17,7 @@ $w->work;
 sub getopt {
     my ($opt, $usage) = describe_options(
         "resque-worker \%o",
-        [ 'redis|r=s@',   "Redis server (default: 127.0.0.1:6379)", { default => '127.0.0.1:6379' } ],
+        [ 'redis|r=s',   "Redis server (default: 127.0.0.1:6379)", { default => '127.0.0.1:6379' } ],
         [ 'queue|q=s@',   "Queue name/s (required)", { required => 1 } ],
         [],
         [ 'interval|i=f', "Polling interval in floating seconds for this resque worker (Default 5 seconds)", { default => 5 } ],
