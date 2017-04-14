@@ -42,7 +42,7 @@ has class   => ( is => 'rw', lazy => 1, default => sub { confess "This job needs
 Name of the queue this job is or should be.
 
 =cut
-has queue   => (
+has queue => (
     is        => 'rw', lazy => 1,
     default   => \&queue_from_class,
     predicate => 'queued'
@@ -53,7 +53,7 @@ has queue   => (
 Array of arguments for this job.
 
 =cut
-has args    => ( is => 'rw', isa => 'ArrayRef', default => sub {[]} );
+has args => ( is => 'rw', isa => 'ArrayRef', default => sub {[]} );
 
 =attr payload
 
@@ -67,15 +67,12 @@ coerce 'HashRef'
     => from 'Str'
     => via { JSON->new->utf8->decode($_) };
 has payload => (
-    is   => 'ro',
-    isa  => 'HashRef',
-    coerce => 1,
-    lazy => 1,
-    builder => '_build_payload',
-    trigger => sub {
-        my ( $self, $hr ) = @_;
-        $self->_trigger_payload($hr);
-    },
+    is      => 'ro',
+    isa     => 'HashRef',
+    coerce  => 1,
+    lazy    => 1,
+    builder => 'payload_builder',
+    trigger => \&payload_trigger
 );
 
 =method encode
@@ -185,16 +182,24 @@ sub fail {
     );
 }
 
-sub _build_payload {
-    my ($self,) = @_;
+=method payload_builder
 
-    return +{
-        class => $self->class,
-        args  => $self->args,
-    };
-}
+Default payload builder method. This method is public only to be used in the
+context of plugins that adds attributes to this class.
 
-sub _trigger_payload {
+=cut
+sub payload_builder {+{
+    class => $_[0]->class,
+    args  => $_[0]->args
+}}
+
+=method payload_trigger
+
+Default payload trigger method. This method is public only to be used in the
+context of plugins that adds attributes to this class.
+
+=cut
+sub payload_trigger {
     my ( $self, $hr ) = @_;
     $self->class( $hr->{class} );
     $self->args( $hr->{args} ) if $hr->{args};
