@@ -1,5 +1,7 @@
 {{$NEXT}}
 
+0.28      2017-04-14 12:19:26+02:00 Europe/Madrid
+
     - Fixed --redis server:port option on resque-worker (#GH23 by joshrabinowitz)
     - Added some missing deps on 5.24
 

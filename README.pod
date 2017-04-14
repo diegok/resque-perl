@@ -1,3 +1,5 @@
+=pod
+
 =head1 Resque for perl
 
 Redis-backed library for creating background jobs, placing them on multiple queues, and processing them later.
@@ -43,24 +45,25 @@ queues:
 
 =head1 DESCRIPTION
 
-Resque is a Redis-backed library for creating background jobs, placing them on multiple queues, 
+Resque is a Redis-backed library for creating background jobs, placing them on multiple queues,
 and processing them later.
 
 This library is a perl port of the original Ruby one: L<https://github.com/defunkt/resque>
 
-My main goal doing this port is to use the same backend to be able to manage the system using 
+My main goal doing this port is to use the same backend to be able to manage the system using
 ruby's resque-server webapp.
 
 As extracted from the original docs, the main features of Resque are:
 
-Resque workers can be distributed between multiple machines, support priorities, are resilient to 
+Resque workers can be distributed between multiple machines, support priorities, are resilient to
 memory leaks, tell you what they're doing, and expect failure.
 
-Resque queues are persistent; support constant time, atomic push and pop (thanks to Redis); provide 
+Resque queues are persistent; support constant time, atomic push and pop (thanks to Redis); provide
 visibility into their contents; and store jobs as simple JSON hashes.
 
-The Resque frontend tells you what workers are doing, what workers are not doing, what queues you're 
+The Resque frontend tells you what workers are doing, what workers are not doing, what queues you're
 using, what's in those queues, provides general usage stats, and helps you track failures.
 
 A lot more about Resque can be read on the original blog post: L<http://github.com/blog/542-introducing-resque>
 
+=cut
