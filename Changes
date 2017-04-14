@@ -1,7 +1,11 @@
 {{$NEXT}}
 
+    - Fixed --redis server:port option on resque-worker (#GH23 by joshrabinowitz)
+    - Added some missing deps on 5.24
+
+0.27      2017-02-20 15:20:09+01:00 Europe/Madrid
+
     - Fixed cant_fork option on resque-worker (#GH21)
-    - Fixed --redis server:port option on resque-worker
 
 0.26      2016-08-19 20:27:43+02:00 Europe/Madrid
 
