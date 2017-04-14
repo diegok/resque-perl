@@ -71,15 +71,11 @@ has payload => (
     isa  => 'HashRef',
     coerce => 1,
     lazy => 1,
-    default => sub {{
-        class => $_[0]->class,
-        args  => $_[0]->args
-    }},
+    builder => '_build_payload',
     trigger => sub {
         my ( $self, $hr ) = @_;
-        $self->class( $hr->{class} );
-        $self->args( $hr->{args} ) if $hr->{args};
-    }
+        $self->_trigger_payload($hr);
+    },
 );
 
 =method encode
@@ -187,6 +183,21 @@ sub fail {
         exception => $exception,
         error     => $error
     );
+}
+
+sub _build_payload {
+    my ($self,) = @_;
+
+    return +{
+        class => $self->class,
+        args  => $self->args,
+    };
+}
+
+sub _trigger_payload {
+    my ( $self, $hr ) = @_;
+    $self->class( $hr->{class} );
+    $self->args( $hr->{args} ) if $hr->{args};
 }
 
 __PACKAGE__->meta->make_immutable();
