@@ -10,6 +10,8 @@ use Class::Load qw(load_class);
 
 =attr resque
 
+Provides 'redis' method, which provides access to our redis subsystem.
+
 =cut
 has resque  => (
     is      => 'rw',
@@ -86,6 +88,8 @@ has payload => (
 
 String representation(JSON) to be used on the backend.
 
+    $job->encode();
+
 =cut
 sub encode {
     my $self = shift;
@@ -93,6 +97,12 @@ sub encode {
 }
 
 =method stringify
+    
+Returns a string version of the job, like
+
+'(Job{queue_name) | ClassName | args_encoded)'
+
+    my $stringified = $job->stringify();
 
 =cut
 sub stringify {
@@ -107,6 +117,8 @@ sub stringify {
 =method queue_from_class
 
 Normalize class name to be used as queue name.
+
+    my $queue_name = $job->queue_from_class();
 
     NOTE: future versions will try to get the
           queue name from the real class attr
@@ -124,6 +136,8 @@ sub queue_from_class {
 
 Load job class and call perform() on it.
 This job object will be passed as the only argument.
+    
+    $job->perform();
 
 =cut
 sub perform {
@@ -141,6 +155,8 @@ sub perform {
 Add this job to resque.
 See Rescue::push().
 
+    $job->enqueue();
+
 =cut
 sub enqueue {
     my $self = shift;
@@ -156,6 +172,8 @@ object queue, class and args.
 
 See Resque::mass_dequeue() for massive destruction.
 
+    $job->enqueue();
+
 =cut
 sub dequeue {
     my $self = shift;
@@ -168,7 +186,10 @@ sub dequeue {
 
 =method fail
 
-Store a failure on this job.
+Store a failure (or arrayref of failures) on this job.
+
+    $job->fail( "error message'); # or
+    $job->fail( ['msg1', 'msg2'] );
 
 =cut
 sub fail {

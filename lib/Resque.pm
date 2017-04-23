@@ -130,6 +130,8 @@ has failures => (
 Returns a new L<Resque::Worker> on this resque instance.
 It can have plugin/roles applied. See L<Resque::Pluggable>.
 
+    my $worker = $r->worker();
+
 =cut
 sub worker {
     my $self = shift;
@@ -167,6 +169,8 @@ Pops a job off a queue. Queue name should be a string.
 
 Returns a Resque::Job object.
 
+    my $resque_job = $r->pop( 'queue_name' );
+
 =cut
 sub pop {
     my ( $self, $queue ) = @_;
@@ -184,6 +188,8 @@ sub pop {
 Returns the size of a queue.
 Queue name should be a string.
 
+    my $size = $r->size();
+
 =cut
 sub size {
     my ( $self, $queue ) = @_;
@@ -192,7 +198,7 @@ sub size {
 
 =method peek
 
-Returns an array of jobs currently queued.
+Returns an array of jobs currently queued, or an arrayref in scalar context.
 
 First argument is queue name and an optional secound and third are
 start and count values that can be used for pagination.
@@ -203,7 +209,8 @@ of count. So, passing -1 will return full list, -2 all but last
 element and so on.
 
 To get the 3rd page of a 30 item, paginatied list one would use:
-    $resque->peek('my_queue', 59, 30)
+
+    my @jobs = $resque->peek('my_queue', 59, 30)
 
 =cut
 sub peek {
@@ -218,7 +225,9 @@ sub peek {
 
 =method queues
 
-Returns an array of all known Resque queues.
+Returns an array of all known Resque queues, or an arrayref in scalar context.
+
+    my @queues = $r->queues();
 
 =cut
 sub queues {
@@ -230,12 +239,26 @@ sub queues {
 =method remove_queue
 
 Given a queue name, completely deletes the queue.
+    
+    $r->remove_queue( 'my_queue' );
 
 =cut
 sub remove_queue {
     my ( $self, $queue ) = @_;
     $self->redis->srem( $self->key('queues'), $queue );
     $self->redis->del( $self->key( queue => $queue ) );
+}
+
+=method create_queue
+
+Given a queue name, creates an empty queue.
+    
+    $r-create_queue( 'my_queue' );
+
+=cut
+sub create_queue {
+    my ( $self, $queue ) = @_;
+    $self->_watch_queue( $queue );
 }
 
 =method mass_dequeue
@@ -255,14 +278,14 @@ That is, for these two jobs:
 
 The following call will remove both:
 
-    $rescue->mass_dequeue({
+    my $num_removed = $rescue->mass_dequeue({
         queue => 'test',
         class => 'UpdateGraph'
     });
 
 Whereas specifying args will only remove the 2nd job:
 
-    $rescue->mass_dequeue({
+    my $num_removed = $rescue->mass_dequeue({
         queue => 'test',
         class => 'UpdateGraph',
         args  => ['ruby']
@@ -304,6 +327,8 @@ hashref or string(payload for object).
 L<Resque::Job> class can be extended thru roles/plugins.
 See L<Resque::Pluggable>.
 
+    $r->new_job( $job_or_job_hashref );
+
 =cut
 sub new_job {
     my ( $self, $job ) = @_;
@@ -332,8 +357,9 @@ sub key {
 
 =method keys
 
-Returns an array of all known Resque keys in Redis. Redis' KEYS operation
-is O(N) for the keyspace, so be careful - this can be slow for big databases.
+Returns an array of all known Resque keys in Redis, or an arrayref in scalar context. 
+Redis' KEYS operation is O(N) for the keyspace, so be careful - 
+this can be slow for big databases.
 
 =cut
 sub keys {
@@ -347,6 +373,8 @@ sub keys {
 This method will delete every trace of this Resque system on
 the redis() backend.
 
+    $r->flush_namespace();
+
 =cut
 sub flush_namespace {
     my $self = shift;
@@ -359,6 +387,8 @@ sub flush_namespace {
 =method list_range
 
 Does the dirty work of fetching a range of items from a Redis list.
+
+    my $items_ref = $r->list_range( $key, $stat, $count );
 
 =cut
 sub list_range {
