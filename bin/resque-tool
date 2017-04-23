@@ -24,6 +24,12 @@ if ($opt->delete) {
         print "resque-tool: deleted queue: $name\n" if $opt->verbose;
     }
 }
+if ($opt->create) {
+    for my $name ( @{ $opt->create || [] } ) {
+        $r->create_queue( $name );
+        print "resque-tool: create queue: $name\n" if $opt->verbose;
+    }
+}
 
 sub getopt {
     my ($opt, $usage) = describe_options(
@@ -31,6 +37,7 @@ sub getopt {
         [ 'redis|r=s',   "Redis server (default: 127.0.0.1:6379)", { default => '127.0.0.1:6379' } ],
         [ 'verbose|v',    "set resque-tool to be verbose" ],
         [ 'show|s',       "show queues" ],
+        [ 'create|c=s@',  "create named queue(s)" ],
         [ 'delete|d=s@',  "delete named queue(s)" ],
         [ 'help',         "print usage message and exit" ],
     );
@@ -49,7 +56,11 @@ Show all queues in verbose mode (with sizes):
 
     resque-tool --show --verbose
 
-Show all queues:
+Create named queue(s):
+
+    resque-tool --create queuename
+
+Delete named queue(s):
 
     resque-tool --delete queuename
 
