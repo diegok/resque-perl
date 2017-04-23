@@ -1,7 +1,8 @@
 {{$NEXT}}
 
-    - Resque::create_queue() added for resque-tool.
     - Added bin/resque-tool
+    - Resque::create_queue() added for resque-tool.
+    - Improve pod
 
 0.28      2017-04-14 12:19:26+02:00 Europe/Madrid
 
