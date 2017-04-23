@@ -41,6 +41,6 @@ Listen to jobs on multiple queues:
 
 See --help option to know all it's options:
 
-    reque-worker --help
+    resque-worker --help
 
 =cut
