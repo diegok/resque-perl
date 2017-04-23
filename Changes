@@ -1,8 +1,8 @@
 {{$NEXT}}
 
-    - Added bin/resque-tool
+    - Improve docs (joshrabinowitz)
+    - New bin/resque-tool to handle admin tasks (only queues ATM) (joshrabinowitz)
     - Resque::create_queue() added for resque-tool.
-    - Improve pod
 
 0.28      2017-04-14 12:19:26+02:00 Europe/Madrid
 
