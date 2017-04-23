@@ -238,6 +238,16 @@ sub remove_queue {
     $self->redis->del( $self->key( queue => $queue ) );
 }
 
+=method create_queue
+
+Given a queue name, creates an empty queue.
+
+=cut
+sub create_queue {
+    my ( $self, $queue ) = @_;
+    $self->_watch_queue( $queue );
+}
+
 =method mass_dequeue
 
 Removes all matching jobs from a queue. Expects a hashref
