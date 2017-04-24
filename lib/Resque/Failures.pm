@@ -40,6 +40,10 @@ has failure_class => (
 
 create() a failure on the failure_class() and save() it.
 
+$failures->throw( %job_description_hash );
+
+See L<Resque> code for a usage example.
+
 =cut
 sub throw {
     my $self = shift;
@@ -51,6 +55,8 @@ sub throw {
 
 Create a new failure on the failure_class() backend.
 
+$failures->create( ... );
+
 =cut
 sub create {
     my $self = shift;
@@ -59,7 +65,9 @@ sub create {
 
 =method count
 
-How many failures was in all the resque system.
+How many failures are in the resque system.
+
+my $count = $failures->count();
 
 =cut
 sub count {
@@ -69,8 +77,10 @@ sub count {
 
 =method all
 
-Return a range of failures in the same way Resque::peek() does for
-jobs.
+Return a range of failures (or an arrayref in scalar context)
+in the same way Resque::peek() does for jobs.
+
+my @failures = $failures->all('my_queue', $opt_start, $opt_count);
 
 =cut
 sub all {
@@ -86,6 +96,8 @@ sub all {
 
 Remove all failures.
 
+$failures->clear();
+
 =cut
 sub clear {
     my $self = shift;
@@ -97,6 +109,8 @@ sub clear {
 Requeue by index number.
 
 Failure will be updated to note retried date.
+
+$failures->requeue( $index );
 
 =cut
 sub requeue {
@@ -123,6 +137,8 @@ Please note that, when you remove some index, all
 sucesive ones will move left, so index will decrese
 one. If you want to remove several ones start removing
 from the rightmost one.
+
+$failures->remove( $index );
 
 =cut
 sub remove {

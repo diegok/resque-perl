@@ -10,7 +10,9 @@ Moose::Exporter->setup_import_methods(
 );
 
 =method add_to
+
 Role applier for Resque, Resque::Worker and Resque::Job.
+
 =cut
 sub add_to {
     my ( $meta, $to, @options ) = @_;
