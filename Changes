@@ -1,5 +1,15 @@
 {{$NEXT}}
 
+0.30      2017-04-27 06:52:03+02:00 Europe/Madrid
+
+    - Improve docs with usage examples (joshrabinowitz)
+
+0.29      2017-04-24 00:34:22+02:00 Europe/Madrid
+
+    - Improve docs (joshrabinowitz)
+    - New bin/resque-tool to handle admin tasks (only queues ATM) (joshrabinowitz)
+    - Resque::create_queue() added for resque-tool.
+
 0.28      2017-04-14 12:19:26+02:00 Europe/Madrid
 
     - Fixed --redis server:port option on resque-worker (#GH23 by joshrabinowitz)

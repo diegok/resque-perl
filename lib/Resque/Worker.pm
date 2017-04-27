@@ -115,6 +115,8 @@ has interval => ( is => 'rw', default => sub{5} );
 
 Stop processing jobs after the current one has completed (if we're
 currently running one).
+ 
+$worker->pause();
 
 =cut
 sub pause           { $_[0]->paused(1) }
@@ -123,6 +125,8 @@ sub pause           { $_[0]->paused(1) }
 
 Start processing jobs again after a pause
 
+$worker->unpause();
+
 =cut
 sub unpause         { $_[0]->paused(0) }
 
@@ -130,6 +134,8 @@ sub unpause         { $_[0]->paused(0) }
 
 Schedule this worker for shutdown. Will finish processing the
 current job.
+
+$worker->shutdown_please();
 
 =cut
 sub shutdown_please {
@@ -141,15 +147,19 @@ sub shutdown_please {
 
 Kill the child and shutdown immediately.
 
+$worker->shutdown_now();
+
 =cut
 sub shutdown_now    { $_[0]->shutdown_please && $_[0]->kill_child }
 
 =method work
 
-Calling this method will make this worker to start pulling & running jobs
+Calling this method will make this worker start pulling & running jobs
 from queues().
 
 This is the main wheel and will run while shutdown() is false.
+
+$worker->work();
 
 =cut
 sub work {
@@ -173,6 +183,8 @@ sub work {
 =method work_tick
 
 Perform() one job and wait till it finish.
+
+$worker->work_tick();
 
 =cut
 sub work_tick {
@@ -214,6 +226,8 @@ sub work_tick {
 Call perform() on the given Resque::Job capturing and reporting
 any exception.
 
+$worker->perform( $job );
+
 =cut
 sub perform {
     my ( $self, $job ) = @_;
@@ -235,6 +249,8 @@ sub perform {
 Kills the forked child immediately, without remorse. The job it
 is processing will not be completed.
 
+$worker->kill_child();
+
 =cut
 sub kill_child {
     my $self = shift;
@@ -254,6 +270,8 @@ sub kill_child {
 
 Add a queue this worker should listen to.
 
+$worker->add_queue( "queuename" );
+
 =cut
 sub add_queue {
     my $self = shift;
@@ -264,6 +282,8 @@ sub add_queue {
 =method del_queue
 
 Stop listening to the given queue.
+
+$worker->del_queue( "queuename" );
 
 =cut
 sub del_queue {
@@ -280,6 +300,8 @@ sub del_queue {
 
 Pull the next job to be precessed.
 
+my $job = $worker->reserve();
+
 =cut
 sub reserve {
     my $self = shift;
@@ -295,6 +317,8 @@ sub reserve {
 =method working_on
 
 Set worker and working status on the given L<Resque::Job>.
+
+$job->working_on( $resque_job );
 
 =cut
 sub working_on {
@@ -314,6 +338,8 @@ sub working_on {
 
 Inform the backend this worker has done its current job
 
+$job->done_working();
+
 =cut
 sub done_working {
     my $self = shift;
@@ -325,6 +351,8 @@ sub done_working {
 
 What time did this worker start?
 Returns an instance of DateTime.
+
+my $datetime = $worker->started();
 
 =cut
 sub started {
@@ -342,6 +370,8 @@ sub _parsedate {
 
 Tell Redis we've started
 
+$worker->set_started();
+
 =cut
 sub set_started {
     my $self = shift;
@@ -351,6 +381,8 @@ sub set_started {
 =method processing
 
 Returns a hash explaining the Job we're currently processing, if any.
+
+$worker->processing();
 
 =cut
 sub processing {
@@ -362,6 +394,8 @@ sub processing {
 
 What time did this worker started to work on current job?
 Returns an instance of DateTime or undef when it's not working.
+
+my $datetime = $worker->processing_started();
 
 =cut
 sub processing_started {
@@ -375,6 +409,8 @@ sub processing_started {
 Returns a string representing the current worker state,
 which can be either working or idle
 
+my $state = $worker->state();
+
 =cut
 sub state {
     my $self = shift;
@@ -385,6 +421,8 @@ sub state {
 
 Boolean - true if working, false if not
 
+my $working = $worker->is_working();
+
 =cut
 sub is_working {
     my $self = shift;
@@ -394,6 +432,8 @@ sub is_working {
 =method is_idle
 
 Boolean - true if idle, false if not
+
+my $idle = $worker->is_idle();
 
 =cut
 sub is_idle {
@@ -418,6 +458,8 @@ Given a string, sets the procline ($0) and logs.
 Procline is always in the format of:
     resque-VERSION: STRING
 
+$worker->procline( "string" );
+
 =cut
 sub procline {
     my $self = shift;
@@ -434,6 +476,8 @@ Helper method called by work() to:
   1. register_signal_handlers()
   2. prune_dead_workers();
   3. register_worker();
+
+$worker->startup();
 
 =cut
 sub startup {
@@ -456,6 +500,8 @@ Registers the various signal handlers a worker responds to.
  USR1: Kill the forked child immediately, continue processing jobs.
  USR2: Don't process any new jobs
  CONT: Start processing jobs again after a USR2
+
+$worker->register_signal_handlers();
 
 =cut
 sub register_signal_handlers {
@@ -482,6 +528,8 @@ will leave stale state information in Redis.
 By checking the current Redis state against the actual
 environment, we can determine if Redis is old and clean it up a bit.
 
+$worker->prune_dead_worker();
+
 =cut
 sub prune_dead_workers {
     my $self = shift;
@@ -501,6 +549,8 @@ sub prune_dead_workers {
 Registers ourself as a worker. Useful when entering the worker
 lifecycle on startup.
 
+$worker->register_worker();
+
 =cut
 sub register_worker {
     my $self = shift;
@@ -511,6 +561,8 @@ sub register_worker {
 =method unregister_worker
 
 Unregisters ourself as a worker. Useful when shutting down.
+
+$worker->unregister_worker();
 
 =cut
 sub unregister_worker {
@@ -545,6 +597,8 @@ sub unregister_worker {
 Returns an Array of string pids of all the other workers on this
 machine. Useful when pruning dead workers on startup.
 
+my @pids = $worker->worker_pids();
+
 =cut
 sub worker_pids {
     my $self = shift;
@@ -573,6 +627,8 @@ sub worker_pids {
 
 If verbose() is true, this will print to STDERR.
 
+$worker->log( 'message here' );
+
 =cut
 #TODO: add logger() attr to containg a logger object and if set, use that instead of print!
 sub log {
@@ -584,7 +640,9 @@ sub log {
 =method processed
 
 Retrieve from L<Resque::Stat> many jobs has done this worker.
-Pass a true argument to increment by one.
+Pass a true argument to increment by one before retrieval.
+
+my $jobs_run = $worker->processed( $boolean );
 
 =cut
 sub processed {
@@ -599,7 +657,9 @@ sub processed {
 =method failed
 
 How many failed jobs has this worker seen.
-Pass a true argument to increment by one.
+Pass a true argument to increment by one before retrieval.
+
+my $jobs_run = $worker->processed( $boolean );
 
 =cut
 sub failed {
@@ -614,6 +674,8 @@ sub failed {
 =method find
 
 Returns a single worker object. Accepts a string id.
+
+my $worker_object = $worker->find( $worker_id );
 
 =cut
 sub find {
@@ -630,7 +692,10 @@ sub find {
 
 =method all
 
-Returns all worker registered on the backend.
+Returns a list of all worker registered on the backend, or an
+arrayref in scalar context;
+
+my @workers = $worker->all();
 
 =cut
 sub all {
@@ -643,6 +708,7 @@ sub all {
 
 Returns true if the given worker id exists on redis() backend.
 
+my $exists = $worker->exists( $worker_id );
 =cut
 sub exists {
     my ($self, $worker_id) = @_;

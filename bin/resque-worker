@@ -18,11 +18,11 @@ sub getopt {
     my ($opt, $usage) = describe_options(
         "resque-worker \%o",
         [ 'redis|r=s',   "Redis server (default: 127.0.0.1:6379)", { default => '127.0.0.1:6379' } ],
-        [ 'queue|q=s@',   "Queue name/s (required)", { required => 1 } ],
+        [ 'queue|q=s@',   "Queue name(s) (required)", { required => 1 } ],
         [],
         [ 'interval|i=f', "Polling interval in floating seconds for this resque worker (Default 5 seconds)", { default => 5 } ],
         [],
-        [ 'module|M=s@',  "Modules to load before forking occurs" ],
+        [ 'module|M=s@',  "Module(s) to load before forking occurs" ],
         [ 'cant_fork|f',   "Don't let resque fork" ],
         [],
         [ 'verbose|v',    "set resque worker to be verbose" ],
@@ -41,6 +41,6 @@ Listen to jobs on multiple queues:
 
 See --help option to know all it's options:
 
-    reque-worker --help
+    resque-worker --help
 
 =cut

@@ -1,0 +1,71 @@
+#!/usr/bin/env perl
+# PODNAME: resque-tool
+# ABSTRACT: CLI to examine and delete queues
+
+use strict;
+use Resque;
+use Getopt::Long::Descriptive;
+
+my $opt = getopt();
+my $r = Resque->new( redis => $opt->redis );
+if ($opt->show) {
+    my @queues = $r->queues;
+    for my $q (@queues) {
+        print "$q";
+        if ($opt->verbose) {
+            printf( ": %d items", $r->size($q) );
+        }
+        print "\n";
+    }
+}
+if ($opt->delete) {
+    for my $name ( @{ $opt->delete || [] } ) {
+        $r->remove_queue( $name );
+        print "resque-tool: deleted queue: $name\n" if $opt->verbose;
+    }
+}
+if ($opt->create) {
+    for my $name ( @{ $opt->create || [] } ) {
+        $r->create_queue( $name );
+        print "resque-tool: create queue: $name\n" if $opt->verbose;
+    }
+}
+
+sub getopt {
+    my ($opt, $usage) = describe_options(
+        "resque-tool \%o",
+        [ 'redis|r=s',   "Redis server (default: 127.0.0.1:6379)", { default => '127.0.0.1:6379' } ],
+        [ 'verbose|v',    "set resque-tool to be verbose" ],
+        [ 'show|s',       "show queues" ],
+        [ 'create|c=s@',  "create named queue(s)" ],
+        [ 'delete|d=s@',  "delete named queue(s)" ],
+        [ 'help',         "print usage message and exit" ],
+    );
+    print($usage->text), exit if $opt->help;
+
+    return $opt;
+}
+
+=head1 SYNOPSIS
+
+Show all queues:
+
+    resque-tool --show
+
+Show all queues in verbose mode (with sizes):
+
+    resque-tool --show --verbose
+
+Create named queue(s):
+
+    resque-tool --create queuename
+
+Delete named queue(s):
+
+    resque-tool --delete queuename
+
+See --help option to see all options:
+
+    resque-tool --help
+
+=cut
