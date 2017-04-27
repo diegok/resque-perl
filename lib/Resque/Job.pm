@@ -37,7 +37,7 @@ has worker  => (
 Class to be performed by this job.
 
 =cut
-has class   => ( is => 'rw', lazy => 1, default => sub { confess "This job needs a class to do some work." } );
+has class => ( is => 'rw', lazy => 1, default => sub { confess "This job needs a class to do some work." } );
 
 =attr queue
 
@@ -74,7 +74,7 @@ has payload => (
     coerce  => 1,
     lazy    => 1,
     builder => 'payload_builder',
-    trigger => \&payload_trigger
+    trigger => \&_payload_trigger
 );
 
 =method encode
@@ -90,7 +90,7 @@ sub encode {
 }
 
 =method stringify
-    
+
 Returns a string version of the job, like
 
 '(Job{queue_name) | ClassName | args_encoded)'
@@ -129,7 +129,7 @@ sub queue_from_class {
 
 Load job class and call perform() on it.
 This job object will be passed as the only argument.
-    
+
     $job->perform();
 
 =cut
@@ -205,7 +205,7 @@ sub fail {
 
 =method payload_builder
 
-Default payload builder method. This method is public only to be used in the
+Default payload builder method. This method is public only to be wrapped in the
 context of plugins that adds attributes to this class.
 
 =cut
@@ -214,16 +214,21 @@ sub payload_builder {+{
     args  => $_[0]->args
 }}
 
-=method payload_trigger
+=method payload_reader
 
-Default payload trigger method. This method is public only to be used in the
+Default payload trigger method. This method is public only to be wrapped in the
 context of plugins that adds attributes to this class.
 
+This mehtod is only called at construction time to populate job class and args
+attributes from payload.
+
 =cut
-sub payload_trigger {
+sub payload_reader {
     my ( $self, $hr ) = @_;
     $self->class( $hr->{class} );
     $self->args( $hr->{args} ) if $hr->{args};
 }
+
+sub _payload_trigger { shift->payload_reader(@_) }
 
 __PACKAGE__->meta->make_immutable();
