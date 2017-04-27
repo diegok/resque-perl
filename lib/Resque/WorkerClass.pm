@@ -65,6 +65,8 @@ This will be called by L<Resque::Worker> to perform() your job. This is the glue
 implementation that will initialize an instance of your class and call your run()
 method on it.
 
+$workerclass->perform( $resque_job );
+
 =cut
 sub perform {
     my ($meta, $job) = @_;

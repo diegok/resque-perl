@@ -186,10 +186,10 @@ sub dequeue {
 
 =method fail
 
-Store a failure (or arrayref of failures) on this job.
+Store a failure (or exception and failure) on this job.
 
     $job->fail( "error message'); # or
-    $job->fail( ['msg1', 'msg2'] );
+    $job->fail( ['exception', 'error message'] );
 
 =cut
 sub fail {

@@ -253,7 +253,7 @@ sub remove_queue {
 
 Given a queue name, creates an empty queue.
     
-    $r-create_queue( 'my_queue' );
+    $r->create_queue( 'my_queue' );
 
 =cut
 sub create_queue {
