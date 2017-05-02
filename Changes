@@ -1,5 +1,7 @@
 {{$NEXT}}
 
+    - Refactored job payload attributes inflate/deflate to allow extension (meru-akimbo)
+
 0.30      2017-04-27 06:52:03+02:00 Europe/Madrid
 
     - Improve docs with usage examples (joshrabinowitz)
