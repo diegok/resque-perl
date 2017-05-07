@@ -239,7 +239,7 @@ sub queues {
 =method remove_queue
 
 Given a queue name, completely deletes the queue.
-    
+
     $r->remove_queue( 'my_queue' );
 
 =cut
@@ -252,7 +252,7 @@ sub remove_queue {
 =method create_queue
 
 Given a queue name, creates an empty queue.
-    
+
     $r->create_queue( 'my_queue' );
 
 =cut
@@ -357,9 +357,9 @@ sub key {
 
 =method keys
 
-Returns an array of all known Resque keys in Redis, or an arrayref in scalar context. 
-Redis' KEYS operation is O(N) for the keyspace, so be careful - 
-this can be slow for big databases.
+Returns an array of all known Resque keys in Redis, or an arrayref in scalar context.
+Redis' KEYS operation is O(N) for the keyspace, so be careful this can be slow for
+big databases.
 
 =cut
 sub keys {
