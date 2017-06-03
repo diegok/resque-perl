@@ -1,5 +1,7 @@
 {{$NEXT}}
 
+    - Improved docs for plugin authors
+
 0.31      2017-05-02 11:43:09+02:00 Europe/Madrid
 
     - Refactored job payload attributes inflate/deflate to allow extension (meru-akimbo)

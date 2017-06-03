@@ -8,7 +8,9 @@ use Class::Load qw(load_class);
 use Moose::Util qw(apply_all_roles);
 
 =attr plugins
-List of plugins to be loaded into this L<Resque> system.
+
+List of plugins to be loaded into this L<Resque> system. See L<Resque::Plugin>.
+
 =cut
 has plugins => (
     is      => 'rw',
@@ -18,8 +20,10 @@ has plugins => (
 );
 
 =attr worker_class
+
 Worker class to be used for worker attribute.
 This is L<Resque::Worker> with all plugin/roles applied to it.
+
 =cut
 has worker_class => (
     is   => 'ro',
@@ -28,8 +32,10 @@ has worker_class => (
 );
 
 =attr job_class
+
 Job class to be used by L<Resque::new_job>.
 This is L<Resque::Job> with all plugin/roles applied to it.
+
 =cut
 has job_class => (
     is   => 'ro',
@@ -38,7 +44,9 @@ has job_class => (
 );
 
 =method BUILD
+
 Apply pluggable roles after BUILD.
+
 =cut
 sub BUILD {} # Ensure it exists!
 after BUILD => sub {
@@ -51,7 +59,7 @@ after BUILD => sub {
     $self->meta->make_immutable;
 };
 
-# Build anon class based on the given one with optional roles applied 
+# Build anon class based on the given one with optional roles applied
 sub _class_with_roles {
     my ( $self, $class, $kind ) = @_;
     my @roles = $self->_roles_for($kind);
@@ -60,7 +68,7 @@ sub _class_with_roles {
 
     my $meta = Moose::Meta::Class->create_anon_class(
         superclasses => [$class],
-        roles        => [@roles] 
+        roles        => [@roles]
     );
 
     # ensure anon doesn't goes out of scope!
