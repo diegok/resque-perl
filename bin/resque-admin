@@ -1,0 +1,76 @@
+#!/usr/bin/env perl
+# PODNAME: resque-admin
+# ABSTRACT: Tool to deal with stalled workers
+
+use strict;
+use v5.10;
+use Resque;
+use Getopt::Long::Descriptive;
+use Time::Concise;
+
+my $opt = getopt();
+
+my $resque = Resque->new( redis => $opt->redis );
+my $limit = $opt->min_age
+          ? DateTime->now->subtract( seconds => from_concise($opt->min_age) )
+          : 0;
+
+for my $w ( $resque->worker->all ) {
+    my ($host, $pid, $queues) = split( ':', $w->id );
+    next if $opt->host && $host ne $opt->host;
+    next if $opt->pid  && $pid ne $opt->pid;
+
+    if ( $w->is_working ) {
+        my $started = $w->processing_started;
+        next if $limit && $started > $limit;
+
+        my $job_data  = $w->processing;
+        my $job_queue = $job_data->{queue} || next; # not doing nothing
+        my $job_class = $job_data->{payload}{class};
+
+        next if $opt->queue && $job_queue ne $opt->queue;
+        next if $opt->class && $job_class ne $opt->class;
+
+        say "[$host:$pid] $started - $job_class on queue $job_queue" if $opt->list;
+    }
+    elsif ( !$limit && !$opt->queue && !$opt->class ) {
+        say "[$host:$pid] waiting for a job on $queues..." if $opt->list;
+    }
+    else { next }
+
+    $w->unregister_worker if $opt->delete;
+}
+
+sub getopt {
+    my ($opt, $usage) = describe_options(
+        "resque-worker \%o",
+        [ 'redis|r=s',   "Redis server (default: 127.0.0.1:6379)", { default => '127.0.0.1:6379' } ],
+        [],
+        [ 'pid|p=s',   "Proccess ID of the worker (all by default)" ],
+        [ 'host|n=s',    "Hostname where the worker is running" ],
+        [ 'min-age|a=s', "Workers working for more than the provided duration, examples: 1d, 2h, 10m (any by default)" ],
+        [ 'queue|q=s', "Origin queue name for filtering failed tasks (all by default)" ],
+        [ 'class|c=s', "Task class name for filtering failed tasks (all by default)" ],
+        [],
+        [ 'list',   "Display matching workers" ],
+        [ 'delete', "Delete matching workers" ],
+        [],
+        [ 'help',   "print usage message and exit" ],
+    );
+
+    print($usage->text), exit if $opt->help;
+    return $opt;
+}
+
+=head1 SYNOPSIS
+
+List or remove matching workers from the resque system. you should never --delete non stalled workers.
+Always --list it first.
+
+    resque-admin --min-age 2d --list
+
+See --help option to know all it's options:
+
+    resque-admin --help
+
+=cut
