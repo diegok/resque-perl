@@ -420,9 +420,7 @@ what you've fixed.
 =head1 TODO
 
 =for :list
-* Improve docs for plugin authors
-* A generic runner for attaching workers to queues.
-* Test worker fork and signal handling.
+* More tests on worker fork and signal handling.
 
 =head1 SEE ALSO
 
