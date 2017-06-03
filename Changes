@@ -1,5 +1,9 @@
 {{$NEXT}}
 
+    - Fixed small bits of CLI docs
+
+0.33      2017-06-03 12:51:56+02:00 Europe/Madrid
+
     - New command to cleanup stalled workers
 
 0.32      2017-06-03 03:10:44+02:00 Europe/Madrid

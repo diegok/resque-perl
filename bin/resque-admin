@@ -1,6 +1,6 @@
 #!/usr/bin/env perl
 # PODNAME: resque-admin
-# ABSTRACT: Tool to deal with stalled workers
+# ABSTRACT: Tool to deal with working or stalled workers
 
 use strict;
 use v5.10;

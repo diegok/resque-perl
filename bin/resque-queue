@@ -1,5 +1,5 @@
 #!/usr/bin/env perl
-# PODNAME: resque-tool
+# PODNAME: resque-queue
 # ABSTRACT: CLI to examine and delete queues
 
 use strict;
