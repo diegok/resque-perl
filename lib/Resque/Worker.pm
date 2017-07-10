@@ -115,7 +115,7 @@ has interval => ( is => 'rw', default => sub{5} );
 
 Stop processing jobs after the current one has completed (if we're
 currently running one).
- 
+
 $worker->pause();
 
 =cut
@@ -209,7 +209,9 @@ sub work_tick {
     else {
         undef $SIG{TERM};
         undef $SIG{INT};
-        undef $SIG{QUIT};
+
+        # Allow graceful shutdown in "cant fork mode"
+        undef $SIG{QUIT} unless $self->cant_fork;
 
         $self->procline( sprintf( "Processing %s since %s", $job->queue, $timestamp ) );
         $self->perform($job);
