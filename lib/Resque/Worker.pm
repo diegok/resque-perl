@@ -164,16 +164,22 @@ $worker->work();
 =cut
 sub work {
     my $self = shift;
+    my $waiting; # Keep track for logging purposes only!
+
     $self->startup;
     while ( ! $self->shutdown ) {
         if ( !$self->paused && ( my $job = $self->reserve ) ) {
+            $waiting=0;
             $self->log("Got job $job");
             $self->work_tick($job);
         }
         elsif( $self->interval ) {
-            my $status = $self->paused ? "Paused" : 'Waiting for ' . join( ', ', @{$self->queues} );
-            $self->procline( $status );
-            $self->log( $status );
+            unless ( $waiting ) {
+                my $status = $self->paused ? "Paused" : 'Waiting for ' . join( ', ', @{$self->queues} );
+                $self->procline( $status );
+                $self->log( $status );
+                $waiting=1;
+            }
             sleep( $self->interval );
         }
     }

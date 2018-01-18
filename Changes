@@ -1,5 +1,10 @@
 {{$NEXT}}
 
+    - Allow graceful shutdown in "cant fork mode" (meru-akimbo)
+    - Stop being repetitive when working on verbose mode
+
+0.34      2017-06-03 12:58:24+02:00 Europe/Madrid
+
     - Fixed small bits of CLI docs
 
 0.33      2017-06-03 12:51:56+02:00 Europe/Madrid
