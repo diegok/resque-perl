@@ -425,7 +425,7 @@ what you've fixed.
 =head1 SEE ALSO
 
 =for :list
-* L<Gearman>
+* L<Gearman|https://metacpan.org/release/Gearman>
 * L<TheSchwartz>
 * L<Queue::Q4M>
 
