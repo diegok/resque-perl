@@ -1,5 +1,9 @@
 {{$NEXT}}
 
+    - New Worker::autoconfig attribute to allow dinamic updates of working workers
+
+0.35      2018-01-18 14:10:34+01:00 Europe/Madrid
+
     - Allow graceful shutdown in "cant fork mode" (meru-akimbo)
     - Stop being repetitive when working on verbose mode
 

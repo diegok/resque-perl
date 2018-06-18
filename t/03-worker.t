@@ -11,7 +11,7 @@ ok ( $r->redis, 'Has redis object' );
 ok ( $r->redis->ping, 'Redis object is alive' );
 
 $r->flush_namespace;
-{
+subtest "Basic worker usage" => sub {
     isa_ok( my $worker = $r->worker, 'Resque::Worker' );
     ok( $worker->add_queue( 'test' ), 'Listen to test queue' );
     is( $worker->queues->[0], 'test', 'Worker know about the queue' );
@@ -67,14 +67,33 @@ $r->flush_namespace;
     # Ensure worker_pids() is on on this platform!
     my @this_pid = grep { $_ == $$ } $worker->worker_pids;
     is(@this_pid, 1, 'Test PID returned by worker_pids()');
-}
+
+    $worker->unregister_worker;
+};
+
+subtest "work() wheel with autoconfig" => sub {
+    isa_ok( my $worker = $r->worker, 'Resque::Worker' );
+    ok( $worker->cant_fork(1), 'Prevent worker from fork()');
+    push_job($r);
+
+    my $count;
+    $worker->autoconfig(sub{
+        my $worker = shift;
+        $worker->add_queue('test2', 'test3');
+        $worker->shutdown_please if ++$count >= 3;
+    });
+
+    $worker->work;
+
+    ok( ! $worker->reserve, 'All jobs were consumed by the work() loop!' );
+};
 
 sub push_job {
     my $r = shift;
     my $class = shift || 'Test::Worker';
-    ok( $r->push( test3 => { class => $class, args => [ 'ouch!' ] } ),    'Push new job to test3 queue' ); 
-    ok( $r->push( test2 => { class => $class, args => [ 'bazinga!' ] } ), 'Push new job to test2 queue' ); 
-    ok( $r->push( test2 => { class => $class, args => [ 'kapow!' ] } ), 'Push another new job to test2 queue' ); 
+    ok( $r->push( test3 => { class => $class, args => [ 'ouch!' ] } ),    'Push new job to test3 queue' );
+    ok( $r->push( test2 => { class => $class, args => [ 'bazinga!' ] } ), 'Push new job to test2 queue' );
+    ok( $r->push( test2 => { class => $class, args => [ 'kapow!' ] } ), 'Push another new job to test2 queue' );
 }
 
 done_testing();

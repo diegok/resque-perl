@@ -111,6 +111,18 @@ Float representing the polling frequency. The default is 5 seconds, but for a se
 =cut
 has interval => ( is => 'rw', default => sub{5} );
 
+=attr autoconfig
+
+An optional callback to be called periodically while work()'ing. It's main purpose is to
+allow running auto-config code as this function will receive this worker as it's only argument
+and will be called before reserving the first job.
+
+When this callback is provided, it will be called on every wheel iteration, so it's recommended
+to keep track of time to prevent running slow re-configuration code every time.
+
+=cut
+has autoconfig => ( is => 'rw', predicate => 'has_autoconfig' );
+
 =method pause
 
 Stop processing jobs after the current one has completed (if we're
@@ -119,7 +131,7 @@ currently running one).
 $worker->pause();
 
 =cut
-sub pause           { $_[0]->paused(1) }
+sub pause { $_[0]->paused(1) }
 
 =method unpause
 
@@ -168,6 +180,7 @@ sub work {
 
     $self->startup;
     while ( ! $self->shutdown ) {
+        $self->autoconfig->($self) if $self->has_autoconfig;
         if ( !$self->paused && ( my $job = $self->reserve ) ) {
             $waiting=0;
             $self->log("Got job $job");
