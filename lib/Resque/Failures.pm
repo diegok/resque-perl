@@ -40,7 +40,7 @@ has failure_class => (
 
 create() a failure on the failure_class() and save() it.
 
-$failures->throw( %job_description_hash );
+  $failures->throw( %job_description_hash );
 
 See L<Resque> code for a usage example.
 
@@ -55,7 +55,7 @@ sub throw {
 
 Create a new failure on the failure_class() backend.
 
-$failures->create( ... );
+  $failures->create( ... );
 
 =cut
 sub create {
@@ -67,7 +67,7 @@ sub create {
 
 How many failures are in the resque system.
 
-my $count = $failures->count();
+  my $count = $failures->count();
 
 =cut
 sub count {
@@ -80,7 +80,8 @@ sub count {
 Return a range of failures (or an arrayref in scalar context)
 in the same way Resque::peek() does for jobs.
 
-my @failures = $failures->all('my_queue', $opt_start, $opt_count);
+  my @all  = $failures->all; # get all failed jobs
+  my @some = $failures->all(10, 10); # get failure 10 to 20
 
 =cut
 sub all {
@@ -96,7 +97,7 @@ sub all {
 
 Remove all failures.
 
-$failures->clear();
+  $failures->clear();
 
 =cut
 sub clear {
@@ -110,7 +111,7 @@ Requeue by index number.
 
 Failure will be updated to note retried date.
 
-$failures->requeue( $index );
+  $failures->requeue( $index );
 
 =cut
 sub requeue {
@@ -138,7 +139,7 @@ sucesive ones will move left, so index will decrese
 one. If you want to remove several ones start removing
 from the rightmost one.
 
-$failures->remove( $index );
+  $failures->remove( $index );
 
 =cut
 sub remove {
@@ -152,7 +153,7 @@ sub remove {
 =method mass_remove
 
 Remove and optionally requeue all or matching failed jobs. Errors that happen
-after this method is fired will remind untouched.
+after this method is fired will remain untouched.
 
 Filters, if present, are useful to select failed jobs and should be regexes or
 strings that will be matched against any of the following failed job field:
