@@ -5,9 +5,10 @@
 use strict;
 use Resque;
 use Getopt::Long::Descriptive;
+use Class::Load;
 
 my $opt = getopt();
-$_->require for @{$opt->module||[]};
+load_class($_) for @{$opt->module||[]};
 
 my $w = Resque->new( redis => $opt->redis )->worker;
 $w->$_($opt->$_) for qw/ interval verbose cant_fork/;
