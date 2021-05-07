@@ -1,5 +1,8 @@
 {{$NEXT}}
 
+    - Accept a hashref to initialize Redis client with custom arguments (gonzalo-radio)
+    - Fixed Gearman link on see also section
+
 0.37      2018-12-10 21:22:15+01:00 Europe/Madrid
 
     - Fixed docs for Resque::Failures::all() (reported by Nick Tonkin)
