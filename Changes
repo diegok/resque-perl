@@ -1,5 +1,7 @@
 {{$NEXT}}
 
+0.41      2021-05-14 14:10:04+02:00 Europe/Madrid
+
     - Fixed mechanism to extract queue name to prevent from removing too much when queue name use simicolons
 
 0.40      2021-05-14 13:51:52+02:00 Europe/Madrid
