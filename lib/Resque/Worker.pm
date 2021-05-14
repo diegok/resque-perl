@@ -83,6 +83,16 @@ memory leaks.
 =cut
 has cant_fork => ( is => 'rw', default => sub {0} );
 
+=attr cant_poll
+
+Set it to a true value to stop this worker from polling for jobs and
+use experimental blocking pop instead.
+
+See timeout().
+
+=cut
+has cant_poll => ( is => 'rw', default => sub {0} );
+
 =attr child
 
 PID of current running child.
@@ -109,7 +119,17 @@ has paused   => ( is => 'rw', default => sub{0} );
 Float representing the polling frequency. The default is 5 seconds, but for a semi-active app you may want to use a smaller value.
 
 =cut
-has interval => ( is => 'rw', default => sub{5} );
+has interval => ( is => 'rw', lazy => 1, default => sub{5} );
+
+=attr timeout
+
+Integer representing the blocking timeout. The default is not to block but to poll queues (see inverval),
+so this attribute will be completely ignored unless dont_poll().
+The default is 30 seconds. Setting it to 0 will make reserve() to block until some job is assigned to this
+workers and will prevent autoconfig() to be called until it happen.
+
+=cut
+has timeout => ( is => 'rw', default => sub{30} );
 
 =attr autoconfig
 
@@ -186,7 +206,7 @@ sub work {
             $self->log("Got job $job");
             $self->work_tick($job);
         }
-        elsif( $self->interval ) {
+        elsif( !$self->cant_poll && $self->interval ) {
             unless ( $waiting ) {
                 my $status = $self->paused ? "Paused" : 'Waiting for ' . join( ', ', @{$self->queues} );
                 $self->procline( $status );
@@ -326,12 +346,16 @@ my $job = $worker->reserve();
 =cut
 sub reserve {
     my $self = shift;
-    my $count = 0;
-    for my $queue ( @{$self->queues} ) {
-        if ( my $job = $self->resque->pop($queue) ) {
-            return $job;
+
+    if ( $self->cant_poll ) {
+        return $self->resque->blpop($self->queues, $self->timeout);
+    }
+    else {
+        for my $queue ( @{$self->queues} ) {
+            if ( my $job = $self->resque->pop($queue) ) {
+                return $job;
+            }
         }
-        return if ++$count == @{$self->queues};
     }
 }
 

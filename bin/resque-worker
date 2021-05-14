@@ -11,7 +11,7 @@ my $opt = getopt();
 load_class($_) for @{$opt->module||[]};
 
 my $w = Resque->new( redis => $opt->redis )->worker;
-$w->$_($opt->$_) for qw/ interval verbose cant_fork/;
+$w->$_($opt->$_) for qw/ interval verbose cant_fork cant_poll timeout /;
 $w->add_queue(@{$opt->queue});
 $w->work;
 
@@ -22,9 +22,11 @@ sub getopt {
         [ 'queue|q=s@',   "Queue name(s) (required)", { required => 1 } ],
         [],
         [ 'interval|i=f', "Polling interval in floating seconds for this resque worker (Default 5 seconds)", { default => 5 } ],
+        [ 'timeout|t=i', "Timeout in seconds to use instead of interval when --cant_poll (Default is 30 seconds. Set to 0 to block forever)", { default => 30 } ],
         [],
         [ 'module|M=s@',  "Module(s) to load before forking occurs" ],
         [ 'cant_fork|f',   "Don't let resque fork" ],
+        [ 'cant_poll|p',   "Use experimental blocking pop instead of polling" ],
         [],
         [ 'verbose|v',    "set resque worker to be verbose" ],
         [ 'help',         "print usage message and exit" ],

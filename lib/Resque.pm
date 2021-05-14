@@ -192,6 +192,27 @@ sub pop {
     });
 }
 
+=method blpop
+
+Pops a job off an arrayref of queues prioritizing by order. Queue names should be string.
+It will block until a job is poped or the optional timeout in seconds.
+
+Returns a Resque::Job object.
+
+    my $resque_job = $r->blpop( [qw/ queue1 queue2 queue3/], 60 );
+
+=cut
+sub blpop {
+    my ( $self, $queues, $timeout ) = @_;
+    my ( $queue, $payload ) = $self->redis->blpop(( map { $self->key( queue => $_ ) } @$queues ), $timeout || 0 );
+    return unless $payload;
+
+    $self->new_job({
+        payload => $payload,
+        queue   => $queue
+    });
+}
+
 =method size
 
 Returns the size of a queue.

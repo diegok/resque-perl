@@ -1,6 +1,7 @@
 {{$NEXT}}
 
     - Fixed test that was failing when Redis::Fast was installed reported by Slaven Rezić (#GH30)
+    - Implemented experimental support for blocking pop instead of polling (#GH2)
 
 0.38      2021-05-07 15:24:50+02:00 Europe/Madrid
 
