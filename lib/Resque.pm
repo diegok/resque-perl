@@ -204,12 +204,12 @@ Returns a Resque::Job object.
 =cut
 sub blpop {
     my ( $self, $queues, $timeout ) = @_;
-    my ( $queue, $payload ) = $self->redis->blpop(( map { $self->key( queue => $_ ) } @$queues ), $timeout || 0 );
+    my ( $key, $payload ) = $self->redis->blpop(( map { $self->key( queue => $_ ) } @$queues ), $timeout || 0 );
     return unless $payload;
 
     $self->new_job({
         payload => $payload,
-        queue   => $queue
+        queue   => (split(':', $key))[-1]
     });
 }
 
