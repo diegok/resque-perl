@@ -207,9 +207,13 @@ sub blpop {
     my ( $key, $payload ) = $self->redis->blpop(( map { $self->key( queue => $_ ) } @$queues ), $timeout || 0 );
     return unless $payload;
 
+    # clean prefix added by key().
+    my $prefix  = $self->key('queue');
+    my ($queue) = $key =~ /^$prefix:(.+)$/;
+
     $self->new_job({
         payload => $payload,
-        queue   => (split(':', $key))[-1]
+        queue   => $queue
     });
 }
 

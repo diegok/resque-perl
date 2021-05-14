@@ -1,5 +1,9 @@
 {{$NEXT}}
 
+    - Fixed mechanism to extract queue name to prevent from removing too much when queue name use simicolons
+
+0.40      2021-05-14 13:51:52+02:00 Europe/Madrid
+
     - Extract queue name from returned key when blocking pop is used
 
 0.39      2021-05-14 12:59:28+02:00 Europe/Madrid
