@@ -20,7 +20,7 @@ $r->flush_namespace;
     is( $task->name, 'Ambar', 'Background job instance attrs initialized' );
     isa_ok( $task->job, 'Resque::Job', '... and can access to the job' );
     isa_ok( $task->resque, 'Resque', '... and can access to resque' );
-    isa_ok( $task->redis, 'Redis', '... and can access to redis' );
+    ok( ref($task->redis) =~ /^Redis/, '... and can access to redis' ); # can be Redis or Redis::Fast
 }
 
 done_testing();

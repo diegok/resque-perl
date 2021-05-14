@@ -1,5 +1,7 @@
 {{$NEXT}}
 
+    - Fixed test that was failing when Redis::Fast was installed reported by Slaven Rezić (#GH30)
+
 0.38      2021-05-07 15:24:50+02:00 Europe/Madrid
 
     - Accept a hashref to initialize Redis client with custom arguments (gonzalo-radio)
