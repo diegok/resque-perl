@@ -160,7 +160,7 @@ Start processing jobs again after a pause
 $worker->unpause();
 
 =cut
-sub unpause         { $_[0]->paused(0) }
+sub unpause { $_[0]->paused(0) }
 
 =method shutdown_please
 
@@ -435,6 +435,25 @@ sub processing {
     eval { $self->encoder->decode( $self->redis->get( $self->key( worker => $self->id ) ) ) } || {};
 }
 
+=method processing_map
+
+Returns a hashref of processing info for a given worker or worker ID list
+
+$worker->processing( $worker1, $worker2, $worker3->id );
+
+=cut
+sub processing_map {
+    my $self = shift;
+    return {} unless @_;
+
+    my @ids  = map { ref($_) ? $_->id : $_ } @_;
+    my @proc = map { ($_ && $self->encoder->decode($_)) || {} }
+               $self->redis->mget( map { $self->key( worker => $_ ) } @ids );
+
+    my $count = 0;
+    return { map { $_ => $proc[$count++] } @ids };
+}
+
 =method processing_started
 
 What time did this worker started to work on current job?
@@ -445,7 +464,8 @@ my $datetime = $worker->processing_started();
 =cut
 sub processing_started {
     my $self = shift;
-    my $run_at = $self->processing->{run_at} || return;
+    my $proc = shift || $self->processing;
+    my $run_at = $proc->{run_at} || return;
     _parsedate($run_at);
 }
 
@@ -704,7 +724,7 @@ sub processed {
 How many failed jobs has this worker seen.
 Pass a true argument to increment by one before retrieval.
 
-my $jobs_run = $worker->processed( $boolean );
+my $jobs_run = $worker->failed( $boolean );
 
 =cut
 sub failed {
@@ -726,13 +746,18 @@ my $worker_object = $worker->find( $worker_id );
 sub find {
     my ( $self, $worker_id ) = @_;
     if ( $self->exists( $worker_id ) ) {
-        my @queues = split ',', (split( ':', $worker_id))[-1];
-        return __PACKAGE__->new(
-            resque => $self->resque,
-            queues => \@queues,
-            id     => $worker_id
-        );
+        return $self->_from_id( $worker_id );
     }
+}
+
+sub _from_id {
+    my ( $self, $worker_id ) = @_;
+    my @queues = split ',', (split( ':', $worker_id))[-1];
+    __PACKAGE__->new(
+        resque => $self->resque,
+        queues => \@queues,
+        id     => $worker_id
+    );
 }
 
 =method all
@@ -745,7 +770,7 @@ my @workers = $worker->all();
 =cut
 sub all {
     my $self = shift;
-    my @w = grep {$_} map { $self->find($_) } $self->redis->smembers( $self->key('workers') );
+    my @w = map { $self->_from_id($_) } $self->redis->smembers( $self->key('workers') );
     return wantarray ? @w : \@w;
 }
 

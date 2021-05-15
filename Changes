@@ -1,5 +1,8 @@
 {{$NEXT}}
 
+    - new size_map() method to get a batch of queue sizes in a pipeline
+    - new processing_map() worker method to get a batch of workers info in a pipeline
+
 0.41      2021-05-14 14:10:04+02:00 Europe/Madrid
 
     - Fixed mechanism to extract queue name to prevent from removing too much when queue name use simicolons

@@ -230,6 +230,26 @@ sub size {
     $self->redis->llen( $self->key( queue => $queue ) );
 }
 
+=method size_map
+
+Returns a hashref with the size of an arrayref of queues.
+Queue names should be strings.
+
+    my $sizes = $r->size_map([qw/ queue1 queue2 queue3 /]);
+
+This method is very fast as it will pipeline all operations.
+
+=cut
+sub size_map {
+    my ( $self, $queues ) = @_;
+    my $res = {};
+    for my $q (@$queues) {
+        $self->redis->llen( $self->key( queue => $q ), sub{ $res->{$q} = $_[0] } )
+    }
+    $self->redis->wait_all_responses;
+    $res;
+}
+
 =method peek
 
 Returns an array of jobs currently queued, or an arrayref in scalar context.
