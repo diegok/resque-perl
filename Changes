@@ -2,6 +2,8 @@
 
     - new size_map() method to get a batch of queue sizes in a pipeline
     - new processing_map() worker method to get a batch of workers info in a pipeline
+    - new refresh_id() to allow dinamically queues to be shown on the iface
+    - new stats::set() required for refresh_id()
 
 0.41      2021-05-14 14:10:04+02:00 Europe/Madrid
 

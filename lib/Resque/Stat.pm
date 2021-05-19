@@ -23,6 +23,18 @@ sub get {
     $self->redis->get( $self->key( stat => $stat ) ) || 0;
 }
 
+=method set
+
+Set the int value of a a given stat name.
+
+$resque_stat->set( stat_name => 5 );
+
+=cut
+sub set {
+    my ($self, $stat, $value) = @_;
+    $self->redis->set( $self->key( stat => $stat ), ($value||0)+0 );
+}
+
 =method incr
 
 For a string stat name, increments the stat by one.

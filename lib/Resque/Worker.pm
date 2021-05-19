@@ -61,7 +61,12 @@ Used to set process status all around.
 The worker stringify to this attribute.
 
 =cut
-has id => ( is => 'rw', lazy => 1, default => sub { $_[0]->_stringify } );
+has id => (
+    is      => 'rw',
+    lazy    => 1,
+    clearer => '_clear_id',
+    default => sub { $_[0]->_stringify }
+);
 sub _string { $_[0]->id } # can't point overload to a mo[o|u]se attribute :-(
 
 =attr verbose
@@ -402,7 +407,12 @@ my $datetime = $worker->started();
 =cut
 sub started {
     my $self = shift;
-    _parsedate( $self->redis->get( $self->key( worker => $self->id => 'started' ) ) );
+    _parsedate( $self->_started );
+}
+
+sub _started {
+    my $self = shift;
+    $self->redis->get( $self->key( worker => $self->id => 'started' ) );
 }
 
 sub _parsedate {
@@ -420,7 +430,8 @@ $worker->set_started();
 =cut
 sub set_started {
     my $self = shift;
-    $self->redis->set( $self->key( worker => $self->id => 'started' ), DateTime->now->strftime('%Y-%m-%d %H:%M:%S %Z') );
+    my $date = shift || DateTime->now->strftime('%Y-%m-%d %H:%M:%S %Z');
+    $self->redis->set( $self->key( worker => $self->id => 'started' ), $date );
 }
 
 =method processing
@@ -619,8 +630,44 @@ $worker->register_worker();
 =cut
 sub register_worker {
     my $self = shift;
-    $self->redis->sadd( $self->key( 'workers'), $self->id );
+    $self->_register_id;
     $self->set_started;
+}
+
+sub _register_id {
+    my $self = shift;
+    $self->redis->sadd( $self->key( 'workers'), $self->id );
+}
+
+=method refresh_id
+
+Do the dirty work after changing the queues on an already
+register_worker().
+
+This will update backend on a single transactionto reflex
+current queues by changing this worker ID which need to
+unregister_worker() and register_worker() again while
+keeping stat() and started().
+
+Only useful when you dinamically update queues and want to
+watch it on the web interface.
+
+=cut
+sub refresh_id {
+    my $self = shift;
+    my $id = $self->_stringify;
+    return if $id eq $self->id; # unchanged?
+    my $start = $self->_started || die "Can't refresh_id before start";
+    my $proc  = $self->stat->get("processed:$self");
+    my $fail  = $self->stat->get("failed:$self");
+    $self->redis->multi;
+    $self->_unregister_id;
+    $self->id($id);
+    $self->_register_id;
+    $self->set_started($start);
+    $self->stat->set("processed:$self", $proc);
+    $self->stat->set("failed:$self", $fail);
+    $self->redis->exec;
 }
 
 =method unregister_worker
@@ -649,10 +696,16 @@ sub unregister_worker {
         }
     }
 
+    $self->_unregister_id;
+
+}
+
+# clear worker registry keys
+sub _unregister_id {
+    my $self = shift;
     $self->redis->srem( $self->key('workers'), $self->id );
     $self->redis->del( $self->key( worker => $self->id ) );
     $self->redis->del( $self->key( worker => $self->id => 'started' ) );
-
     $self->stat->clear("processed:$self");
     $self->stat->clear("failed:$self");
 }
