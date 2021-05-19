@@ -79,7 +79,15 @@ subtest "work() wheel with autoconfig" => sub {
     my $count;
     $worker->autoconfig(sub{
         my $worker = shift;
-        $worker->add_queue('test2', 'test3');
+        unless ( $count ) {
+            my $id    = $worker->id;
+            my $start = $worker->started;
+            ok( $worker->add_queue('test2', 'test3'), 'Dinamically add queues' );
+            ok( $worker->refresh_id, 'Refresh worker-id' );
+            isnt( $worker->id, $id, 'Worker-id was updated' );
+            ok( !$worker->find($id), 'Old ID does not exists now' );
+            is( $worker->started, $start, 'started() was persisted' );
+        }
         $worker->shutdown_please if ++$count >= 3;
     });
 
@@ -100,7 +108,7 @@ subtest "work() wheel with blocking mode" => sub {
     my $count;
     $worker->autoconfig(sub{
         my $worker = shift;
-        $worker->add_queue('test2', 'test3');
+        $worker->add_queue('test2', 'test3') unless $count;
         $worker->shutdown_please if ++$count >= 3;
     });
 
