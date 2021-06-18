@@ -8,7 +8,7 @@ use warnings;
 use File::Temp;
 use IPC::Cmd qw(can_run);
 use POSIX ":sys_wait_h";
-use base qw( Exporter );
+use Exporter qw( import );
 
 our @EXPORT = qw( redis );
 
