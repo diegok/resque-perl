@@ -1,5 +1,14 @@
 {{$NEXT}}
 
+    - Wrap remove() in multi/exec to prevent orphaned markers on failure (#GH34)
+    - Just fix this readme file from previous releases...
+
+0.43      2026-02-21 17:04:17+01:00 Europe/Madrid
+
+    - Wrap remove() in multi/exec to prevent orphaned markers on failure (#GH34)
+
+0.42      2021-05-14 14:10:04+02:00 Europe/Madrid
+
     - new size_map() method to get a batch of queue sizes in a pipeline
     - new processing_map() worker method to get a batch of workers info in a pipeline
     - new refresh_id() to allow dinamically queues to be shown on the iface
