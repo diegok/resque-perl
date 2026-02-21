@@ -146,8 +146,10 @@ sub remove {
     my ( $self, $index ) = @_;
     my $id = rand(0xffffff);
     my $key = $self->key('failed');
+    $self->redis->multi;
     $self->redis->lset( $key, $index, $id);
     $self->redis->lrem( $key, 1, $id );
+    $self->redis->exec;
 }
 
 =method mass_remove
