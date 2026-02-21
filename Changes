@@ -1,5 +1,7 @@
 {{$NEXT}}
 
+0.44      2026-02-21 17:11:30+01:00 Europe/Madrid
+
     - Wrap remove() in multi/exec to prevent orphaned markers on failure (#GH34)
     - Just fix this readme file from previous releases...
 
